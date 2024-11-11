@@ -4,9 +4,12 @@ import LoginSignup from './Components/LoginSignup/LoginSignup';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import CreateTicket from './Components/CreateTicket/CreateTicket';
 import Home from './Components/Home/Home';
+import { Provider } from "./Components/ui/provider"
+
 
 function App() {
   return (
+    <Provider>
     <Router>
       <Routes>
         <Route path="/" element={<LoginSignup />} />
@@ -14,6 +17,7 @@ function App() {
         <Route path="/home" element={<Home />} />
       </Routes>
     </Router>
+    </Provider>
   );
 }
 
