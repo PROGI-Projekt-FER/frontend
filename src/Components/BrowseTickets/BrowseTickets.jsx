@@ -14,12 +14,10 @@ import { Toaster, toaster } from "../ui/toaster";
 import { MdCalendarToday, MdLocationOn } from "react-icons/md";
 
 const BrowseTickets = () => {
-  // Initialize state for tickets, loading status, and error
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch tickets from the API
   useEffect(() => {
     const fetchTickets = async () => {
       try {
@@ -63,6 +61,16 @@ const BrowseTickets = () => {
       default:
         return "gray.500";
     }
+  };
+
+  const formatEventDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
   };
 
   if (loading) {
@@ -115,21 +123,22 @@ const BrowseTickets = () => {
                   {ticket.event.title}
                 </Heading>
                 {ticket.event.description ? (
-    <Text fontWeight="light" mb="1">
-      {ticket.event.description}
-    </Text>
-  ) : (
-    <Box mb="6" />
-  )}
-                <Text mb="2">
-                  <strong>Artist:</strong>{" "}
-                  {ticket.event.eventEntity.name || "N/A"}
-                </Text>
+                  <Text fontWeight="light" mb="1">
+                    {ticket.event.description}
+                  </Text>
+                ) : (
+                  <Box mb="9" />
+                )}
+                {ticket.event.eventEntity.name ? (
+                  <Text fontWeight="bold" mb="1">
+                    {ticket.event.eventEntity.name}
+                  </Text>
+                ) : (
+                  <Box mb="9" />
+                )}
                 <Flex alignItems="center" mb="2">
                   <MdCalendarToday size="20px" style={{ marginRight: "8px" }} />
-                  <Text>
-                    {new Date(ticket.event.eventDate).toLocaleString()}
-                  </Text>
+                  <Text>{formatEventDate(ticket.event.eventDate)}</Text>
                 </Flex>
                 <Flex alignItems="center" mb="2">
                   <MdLocationOn size="20px" style={{ marginRight: "8px" }} />
@@ -138,10 +147,19 @@ const BrowseTickets = () => {
                     {ticket.event.venue.location.city}
                   </Text>
                 </Flex>
-                <Text mb="4">
-                  <strong>Price:</strong>{" "}
-                  {ticket.price ? `$${ticket.price}` : "Free"}
-                </Text>
+                <Flex justifyContent="flex-end" mb="4">
+                  <Badge
+                    bgColor="white"
+                    color="black"
+                    border="1px solid"
+                    borderColor="black"
+                    px="2"
+                    py="1"
+                    borderRadius="md"
+                  >
+                    {ticket.price ? `${ticket.price}€` : "TicketSwap"}
+                  </Badge>
+                </Flex>
                 <Button colorScheme="blue" width="full">
                   View Details
                 </Button>
