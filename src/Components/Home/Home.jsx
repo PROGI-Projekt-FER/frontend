@@ -8,7 +8,10 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://ticketswap-backend.onrender.com/api/test-user'); // Replace with actual endpoint
+        const response = await fetch('https://ticketswap-backend.onrender.com/api/test-user', {
+          method: 'GET',
+          credentials: 'include'
+        });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
