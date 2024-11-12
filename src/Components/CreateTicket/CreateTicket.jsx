@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Input, Stack, Center, Flex } from "@chakra-ui/react";
+import {
+  Button,
+  Card,
+  Input,
+  Stack,
+  Center,
+  Flex,
+  Spinner,
+} from "@chakra-ui/react";
 import { Field } from "../ui/field";
 import { Toaster, toaster } from "../ui/toaster";
 import {
@@ -14,19 +22,21 @@ import { createListCollection } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 const CreateTicket = () => {
-
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Checking session storage...");
+    setLoading(true);
     const user = localStorage.getItem("loggedInUser");
-    console.log(user);
-    if (!user) {
+    if (user) {
+      setLoading(false);
+      setIsLoggedIn(true);
+    } else {
       toaster.create({
-        title: "You must be logged in to create tickets.",
+        title: "You must be logged in to create tickets",
         type: "error",
+        duration: 6000,
       });
-      navigate("/");
+      navigate("/", { replace: true });
     }
   }, [navigate]);
 
@@ -43,6 +53,9 @@ const CreateTicket = () => {
   const [categories, setCategories] = useState(
     createListCollection({ items: [] })
   );
+
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const swapOrSell = createListCollection({
     items: [
@@ -163,6 +176,18 @@ const CreateTicket = () => {
       alert("An error occurred while creating the ticket.");
     }
   };
+
+  if (loading) {
+    return (
+      <>
+        <Toaster />
+
+        <Center h="100vh">
+          <Spinner size="xl" />
+        </Center>
+      </>
+    );
+  }
 
   return (
     <>
