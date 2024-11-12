@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Card, Input, Stack, Center, Flex } from "@chakra-ui/react";
 import { Field } from "../ui/field";
+import { Toaster, toaster } from "../ui/toaster"
 
 import {
   SelectContent,
@@ -43,19 +44,86 @@ const CreateTicket = () => {
   });
 
   const handleSubmit = async () => {
+    console.log("submit")
+    if (!eventName) {
+        return toaster.create({
+          title: "Event Name is required.",
+          type: "error",
+        });
+      }
+      if (!artist) {
+        return toaster.create({
+          title: "Artist Name is required.",
+          type: "error",
+        });
+      }
+      if (!categoryId) {
+        return toaster.create({
+          title: "Category is required.",
+          type: "error",
+        });
+      }
+      if (!timestamp) {
+        return toaster.create({
+          title: "Event Time is required.",
+          type: "error",
+        });
+      }
+      if (!address) {
+        return toaster.create({
+          title: "Address is required.",
+          type: "error",
+        });
+      }
+      if (!city) {
+        return toaster.create({
+          title: "City is required.",
+          type: "error",
+        });
+      }
+      if (offerType === "1" && !swapCategoryId) {
+        return toaster.create({
+          title: "Swap Category is required.",
+          type: "error",
+        });
+      }
+      if (offerType === "2" && (!price || isNaN(parseFloat(price)))) {
+        return toaster.create({
+          title: "Valid Price is required.",
+          type: "error",
+        });
+      }
+  
     const payload = {
-      eventName,
-      artist,
-      categoryId: parseInt(categoryId),
-      subcategoryId: parseInt(subcategoryId),
-      timestamp,
-      address,
-      city,
-      offerType,
-      offerSwapCategories: [],
-      offerSwapSubcategories: [],
+      id: 0,
+      event: {
+        id: 0,
+        title: eventName,
+        description: "",
+        eventDate: timestamp,
+        venue: {
+          id: 0,
+          name: address,
+          capacity: 0,
+          location: {
+            country: "",
+            city: city,
+            address: address,
+          },
+        },
+        eventEntity: {
+          id: 0,
+          name: artist,
+          type: "string",
+        },
+      },
+      status: offerType === "1" ? "SWAP" : "SELL",
+      description: "",
+      price: offerType === "2" ? parseFloat(price) : 0,
+      categoryIds: [parseInt(categoryId)],
+      interestedInCategoryIds: offerType === "1" ? [parseInt(swapCategoryId)] : [],
     };
-
+  
     try {
       const response = await fetch("/tickets", {
         method: "POST",
@@ -64,7 +132,7 @@ const CreateTicket = () => {
         },
         body: JSON.stringify(payload),
       });
-
+  
       if (response.ok) {
         alert("Ticket created successfully!");
       } else {
@@ -73,11 +141,15 @@ const CreateTicket = () => {
     } catch (error) {
       alert("An error occurred while creating the ticket.");
     }
-  };
+  };  
+  
 
   return (
+    <>
+    <Toaster />
+
     <Center h="100vh">
-      <Card.Root width="lg" p="4" borderRadius="md" color="black" backgroundColor="white">
+      <Card.Root width="lg" p="4" borderRadius="md">
         <Card.Header>
           <Card.Title>Create Ticket</Card.Title>
           <Card.Description>
@@ -197,6 +269,7 @@ const CreateTicket = () => {
         </Card.Footer>
       </Card.Root>
     </Center>
+    </>
   );
 };
 
