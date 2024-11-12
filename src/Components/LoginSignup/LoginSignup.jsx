@@ -25,6 +25,7 @@ const LoginSignup = () => {
 
   function createSession(username, email) {
     localStorage.setItem("loggedInUser", JSON.stringify({ username, email }));
+    window.location.href = "/";
   }
 
   function isUserLoggedIn() {

@@ -35,7 +35,7 @@ const Navbar = () => {
         </Link>
 
         {user && (
-          <Link onClick={() => navigate("/create-tickets")} fontWeight="bold" color="white">
+          <Link onClick={() => navigate("/create-ticket")} fontWeight="bold" color="white">
             Create Tickets
           </Link>
         )}
