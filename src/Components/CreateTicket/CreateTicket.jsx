@@ -11,8 +11,25 @@ import {
   SelectValueText,
 } from "../ui/select";
 import { createListCollection } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 
 const CreateTicket = () => {
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("Checking session storage...");
+    const user = localStorage.getItem("loggedInUser");
+    console.log(user);
+    if (!user) {
+      toaster.create({
+        title: "You must be logged in to create tickets.",
+        type: "error",
+      });
+      navigate("/");
+    }
+  }, [navigate]);
+
   const [eventName, setEventName] = useState("");
   const [artist, setArtist] = useState("");
   const [categoryId, setCategoryId] = useState("");
