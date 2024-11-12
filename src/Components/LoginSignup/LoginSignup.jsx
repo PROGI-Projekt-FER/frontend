@@ -20,7 +20,7 @@ export const LoginSignup = () => {
 
             </div>
         </div>
-        <a href="http://localhost:8080/oauth2/authorization/google" className="submit-container">
+        <a href="https://ticketswap-backend.onrender.com/login/oauth2/authorization/google" className="submit-container">
             <div className="submit">
                 <img src={google_icon} alt="" />
                 <div className='intro'>

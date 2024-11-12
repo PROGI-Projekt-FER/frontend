@@ -34,7 +34,6 @@ const CreateTicket = () => {
     ],
   });
 
-  // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
