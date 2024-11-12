@@ -21,7 +21,7 @@ const Navbar = () => {
       alignItems="center"
       justifyContent="space-between"
       p="4"
-      bg="pink.600"
+      bg="blue.800"
       color="white"
       boxShadow="md"
     >
@@ -30,22 +30,22 @@ const Navbar = () => {
       </Heading>
 
       <Flex alignItems="center" gap="4">
-        <Link onClick={() => navigate("/browse-tickets")} fontWeight="bold">
+        <Link onClick={() => navigate("/browse-tickets")} fontWeight="bold" color="white">
           Browse Tickets
         </Link>
 
         {user && (
-          <Link onClick={() => navigate("/create-tickets")} fontWeight="bold">
+          <Link onClick={() => navigate("/create-tickets")} fontWeight="bold" color="white">
             Create Tickets
           </Link>
         )}
 
         {user ? (
-          <Button variant="outline" colorScheme="whiteAlpha" onClick={handleLogout}>
+          <Button variant="outline" colorScheme="whiteAlpha" onClick={handleLogout} color="white">
             Logout
           </Button>
         ) : (
-          <Button variant="outline" colorScheme="whiteAlpha" onClick={handleLogin}>
+          <Button variant="outline" colorScheme="whiteAlpha" onClick={handleLogin} color="white">
             Login
           </Button>
         )}
