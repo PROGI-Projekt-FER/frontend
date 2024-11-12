@@ -5,9 +5,9 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  useNavigate,
 } from "react-router-dom";
 import CreateTicket from "./Components/CreateTicket/CreateTicket";
+import BrowseTickets from "./Components/BrowseTickets/BrowseTickets";
 import Home from "./Components/Home/Home";
 import { Provider } from "./Components/ui/provider";
 
@@ -17,7 +17,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LoginSignup />} />
-          <Route path="/createticket" element={<CreateTicket />} />
+          <Route path="/create-ticket" element={<CreateTicket />} />
+          <Route path="/browse-tickets" element={<BrowseTickets />} />
           <Route path="/home" element={<Home />} />
         </Routes>
       </Router>
