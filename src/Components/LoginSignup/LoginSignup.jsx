@@ -8,66 +8,47 @@ import google_icon from '../Assets/google.png'
 
 const LoginSignup = () => {
 
-    const[action,setAction] = useState("Login")
-    const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const[action,setAction] = useState("Login");
 
-    // Function to get a query parameter by name
-    function getQueryParam(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);  // Returns the value of the parameter or null if not found
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get('username');
+    const email = urlParams.get('email');
+    
+    if (username && email) {
+        // Create a session for the user
+        createSession(username, email);
+    }
+    
+    // Function to create a simulated session
+    function createSession(username, email) {
+        // Store user details in localStorage (or sessionStorage)
+        localStorage.setItem('loggedInUser', JSON.stringify({ username, email }));
     }
 
-    // Function to set the session cookie
-    function setSessionCookie(sessionId) {
-        if (sessionId) {
-            // Set the JSESSIONID cookie
-            document.cookie = `JSESSIONID=${sessionId}; domain=onrender.com;`;
-            console.log('Session cookie set:', sessionId);
-        }
+    function isUserLoggedIn() {
+        const user = localStorage.getItem('loggedInUser');
+        return user !== null;
+    }
+    
+    function getLoggedInUser() {
+        const user = localStorage.getItem('loggedInUser');
+        return user ? JSON.parse(user) : null;
     }
 
-    // Get the session ID from the query string
-    const sessionId = getQueryParam('JSESSIONID');  // Assuming the query parameter is named "JSESSIONID"
-
-    // Set the session cookie if it exists in the query parameter
-    if (sessionId) {
-        setSessionCookie(sessionId);
-    } else {
-        console.log('No session ID found in the URL');
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/';
     }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('https://ticketswap-backend.onrender.com/api/test-user', {
-          method: 'GET',
-          headers: {
-            'Cookie': `JSESSIONID=${getQueryParam('JSESSIONID')}`,  // Manually add the session ID to the header
-            'Content-Type': 'application/json'
-        },
-          credentials: 'include'
-        });
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const result = await response.text();
-        setData(result);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-
-  return (
+    if (isUserLoggedIn()){
+        return (
+            <div>
+                <h2>Logged in as {getLoggedInUser().username} with email {getLoggedInUser().email}</h2>
+                <button onClick={logout}>Logout</button>
+            </div>
+            
+        )
+    } else return (
     
     <div>
          <div className="container">
@@ -88,7 +69,6 @@ const LoginSignup = () => {
             </div>
         </a>
     </div>
-      <h2>{JSON.stringify(data, null, 2)}</h2>
     </div>
   );
 }
