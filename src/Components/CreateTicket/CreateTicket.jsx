@@ -192,7 +192,7 @@ const CreateTicket = () => {
   return (
     <>
       <Toaster />
-      <Center h="92vh">
+      <Center minH="92vh" mt="5" mb="5">
         <Card.Root width="xl" p="4" borderRadius="md">
           <Card.Header>
             <Card.Title>Create Ticket</Card.Title>

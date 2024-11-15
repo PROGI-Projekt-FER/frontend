@@ -88,7 +88,7 @@ const BrowseTickets = () => {
   return (
     <>
       <Toaster />
-      <Center p="4">
+      <Center p="4" overflow="auto">
         {tickets.length === 0 ? (
           <Text>No tickets available</Text>
         ) : (
