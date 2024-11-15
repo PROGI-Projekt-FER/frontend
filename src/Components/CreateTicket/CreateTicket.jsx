@@ -169,6 +169,7 @@ const CreateTicket = () => {
           title: "Ticket created successfully",
           type: "success",
         });
+        window.location.href = "/browse-tickets";
       } else {
         toaster.create({ title: "Error while creating ticket", type: "error" });
       }
