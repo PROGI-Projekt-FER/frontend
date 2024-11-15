@@ -1,4 +1,4 @@
-# Programsko inženjerstvo - TicketSwapper Frontent
+# Programsko inženjerstvo - TicketSwapper Frontend
 
 # Opis projekta
 Ovaj projekt je reultat timskog rada u sklopu projeknog zadatka kolegija [Programsko inženjerstvo](https://www.fer.unizg.hr/predmet/proinz) na Fakultetu elektrotehnike i računarstva Sveučilišta u Zagrebu. 
