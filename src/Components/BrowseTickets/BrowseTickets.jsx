@@ -3,6 +3,7 @@ import { SimpleGrid, Center, Spinner, Text, Box, Flex } from "@chakra-ui/react";
 import { Toaster, toaster } from "../ui/toaster";
 import TicketCard from "../Shared/TicketCard.jsx";
 import FilterComponent from "./FilterComponent.jsx";
+import { createListCollection } from "@chakra-ui/react";
 
 const BrowseTickets = () => {
   const [tickets, setTickets] = useState([]);
@@ -48,27 +49,51 @@ const BrowseTickets = () => {
         const response = await fetch(
           "https://ticketswap-backend.onrender.com/api/categories"
         );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch categories");
-        }
-
         const data = await response.json();
-        setCategories(data); // Set categories from API response
-      } catch (err) {
+        const categoryList = data.map((category) => ({
+          label: category.name,
+          value: category.id.toString(),
+        }));
+        setCategories(createListCollection({ items: categoryList }));
+      } catch (error) {
         toaster.create({
-          title: "Error fetching categories",
-          description: err.message,
+          title: "Failed to fetch categories",
           type: "error",
         });
       }
     };
-
     fetchCategories();
   }, []);
 
   const handleFilterChange = (filteredData) => {
     setFilteredTickets(filteredData);
+  };
+
+  const getCategoryColor = (categoryId) => {
+    switch (categoryId) {
+      case 1:
+        return "blue.500";
+      case 4:
+        return "green.500";
+      case 5:
+        return "purple.500";
+      case 6:
+        return "orange.500";
+      case 7:
+        return "red.500";
+      default:
+        return "gray.500";
+    }
+  };
+
+  const formatEventDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
   };
 
   if (loading) {
@@ -109,7 +134,12 @@ const BrowseTickets = () => {
               alignItems="center"
             >
               {filteredTickets.map((ticket) => (
-                <TicketCard key={ticket.id} ticket={ticket} />
+                <TicketCard
+                  key={ticket.id}
+                  ticket={ticket}
+                  getCategoryColor={getCategoryColor}
+                  formatEventDate={formatEventDate}
+                />
               ))}
             </SimpleGrid>
           )}
