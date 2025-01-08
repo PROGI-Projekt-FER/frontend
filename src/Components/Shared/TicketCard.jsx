@@ -2,7 +2,17 @@ import React from "react";
 import { Box, Badge, Heading, Text, Flex, Button } from "@chakra-ui/react";
 import { MdCalendarToday, MdLocationOn } from "react-icons/md";
 
-const TicketCard = ({ ticket, getCategoryColor, formatEventDate }) => {
+const formatEventDate = (dateString) => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
+};
+
+const TicketCard = ({ ticket }) => {
   return (
     <Box
       width="350px"
@@ -15,14 +25,14 @@ const TicketCard = ({ ticket, getCategoryColor, formatEventDate }) => {
       _hover={{ boxShadow: "xl" }}
     >
       <Badge
-        bgColor={getCategoryColor(ticket.categories[0]?.id)}
+        bgColor={ticket.categories[0]?.colorHexCode || "gray.500"}
         color="white"
         px="2"
         py="1"
         borderRadius="md"
         fontSize="sm"
       >
-        {ticket.categories[0]?.name}
+        {ticket.categories[0]?.name || "Uncategorized"}
       </Badge>{" "}
       <Heading size="xl" mb="2">
         {ticket.event.title}

@@ -69,33 +69,6 @@ const BrowseTickets = () => {
     setFilteredTickets(filteredData);
   };
 
-  const getCategoryColor = (categoryId) => {
-    switch (categoryId) {
-      case 1:
-        return "blue.500";
-      case 4:
-        return "green.500";
-      case 5:
-        return "purple.500";
-      case 6:
-        return "orange.500";
-      case 7:
-        return "red.500";
-      default:
-        return "gray.500";
-    }
-  };
-
-  const formatEventDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
-  };
-
   if (loading) {
     return (
       <>
@@ -134,12 +107,7 @@ const BrowseTickets = () => {
               alignItems="center"
             >
               {filteredTickets.map((ticket) => (
-                <TicketCard
-                  key={ticket.id}
-                  ticket={ticket}
-                  getCategoryColor={getCategoryColor}
-                  formatEventDate={formatEventDate}
-                />
+                <TicketCard key={ticket.id} ticket={ticket} />
               ))}
             </SimpleGrid>
           )}
