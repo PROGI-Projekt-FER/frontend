@@ -39,13 +39,23 @@ const Navbar = () => {
         </Link>
 
         {user && (
-          <Link
-            onClick={() => navigate("/create-ticket")}
-            fontWeight="bold"
-            color="white"
-          >
-            Create Tickets
-          </Link>
+          <>
+            <Link
+              onClick={() => navigate("/my-tickets")}
+              fontWeight="bold"
+              color="white"
+            >
+              My Tickets{" "}
+            </Link>
+
+            <Link
+              onClick={() => navigate("/create-ticket")}
+              fontWeight="bold"
+              color="white"
+            >
+              Create Tickets
+            </Link>
+          </>
         )}
 
         {user ? (
