@@ -1,23 +1,17 @@
 import React, { useEffect, useState } from "react";
-import {
-  SimpleGrid,
-  Box,
-  Text,
-  Heading,
-  Center,
-  Spinner,
-  Button,
-  Badge,
-  Flex,
-} from "@chakra-ui/react";
+import { SimpleGrid, Center, Spinner, Text, Box, Flex } from "@chakra-ui/react";
 import { Toaster, toaster } from "../ui/toaster";
-import { MdCalendarToday, MdLocationOn } from "react-icons/md";
+import TicketCard from "../Shared/TicketCard.jsx";
+import FilterComponent from "./FilterComponent.jsx";
 
 const BrowseTickets = () => {
   const [tickets, setTickets] = useState([]);
+  const [filteredTickets, setFilteredTickets] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Fetch tickets
   useEffect(() => {
     const fetchTickets = async () => {
       try {
@@ -31,6 +25,7 @@ const BrowseTickets = () => {
 
         const data = await response.json();
         setTickets(data);
+        setFilteredTickets(data);
       } catch (err) {
         setError(err.message);
         toaster.create({
@@ -46,38 +41,40 @@ const BrowseTickets = () => {
     fetchTickets();
   }, []);
 
-  const getCategoryColor = (categoryId) => {
-    switch (categoryId) {
-      case 1:
-        return "blue.500";
-      case 4:
-        return "green.500";
-      case 5:
-        return "purple.500";
-      case 6:
-        return "orange.500";
-      case 7:
-        return "red.500";
-      default:
-        return "gray.500";
-    }
-  };
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(
+          "https://ticketswap-backend.onrender.com/api/categories"
+        );
 
-  const formatEventDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
+        if (!response.ok) {
+          throw new Error("Failed to fetch categories");
+        }
+
+        const data = await response.json();
+        setCategories(data); // Set categories from API response
+      } catch (err) {
+        toaster.create({
+          title: "Error fetching categories",
+          description: err.message,
+          type: "error",
+        });
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleFilterChange = (filteredData) => {
+    setFilteredTickets(filteredData);
   };
 
   if (loading) {
     return (
       <>
         <Toaster />
-
         <Center h="100vh">
           <Spinner size="xl" />
         </Center>
@@ -88,90 +85,36 @@ const BrowseTickets = () => {
   return (
     <>
       <Toaster />
-      <Center p="4" overflow="auto">
-        {tickets.length === 0 ? (
-          <Text>No tickets available</Text>
-        ) : (
-          <SimpleGrid
-            minChildWidth="350px"
-            spacing="6"
-            gap="6"
-            width="full"
-            maxWidth="1200px"
-            justifyContent="center"
-            alignItems="center"
-          >
-            {tickets.map((ticket) => (
-              <Box
-                key={ticket.id}
-                width="350px"
-                borderWidth="1px"
-                borderRadius="lg"
-                overflow="hidden"
-                p="6"
-                boxShadow="md"
-                bg="white"
-                _hover={{ boxShadow: "xl" }}
-              >
-                <Badge
-                  bgColor={getCategoryColor(ticket.categories[0]?.id)}
-                  color="white"
-                  px="2"
-                  py="1"
-                  borderRadius="md"
-                  fontSize="sm"
-                >
-                  {ticket.categories[0]?.name}
-                </Badge>{" "}
-                <Heading size="xl" mb="2">
-                  {ticket.event.title}
-                </Heading>
-                {ticket.event.description ? (
-                  <Text fontWeight="light" mb="1">
-                    {ticket.event.description}
-                  </Text>
-                ) : (
-                  <Box mb="9" />
-                )}
-                {ticket.event.eventEntity.name ? (
-                  <Text fontWeight="bold" mb="1">
-                    {ticket.event.eventEntity.name}
-                  </Text>
-                ) : (
-                  <Box mb="9" />
-                )}
-                <Flex alignItems="center" mb="2">
-                  <MdCalendarToday size="20px" style={{ marginRight: "8px" }} />
-                  <Text>{formatEventDate(ticket.event.eventDate)}</Text>
-                </Flex>
-                <Flex alignItems="center" mb="2">
-                  <MdLocationOn size="20px" style={{ marginRight: "8px" }} />
-                  <Text>
-                    {ticket.event.venue.location.address},{" "}
-                    {ticket.event.venue.location.city}
-                  </Text>
-                </Flex>
-                <Flex justifyContent="flex-end" mb="4">
-                  <Badge
-                    bgColor="white"
-                    color="black"
-                    border="1px solid"
-                    borderColor="black"
-                    px="2"
-                    py="1"
-                    borderRadius="md"
-                  >
-                    {ticket.price ? `${ticket.price}€` : "TicketSwap"}
-                  </Badge>
-                </Flex>
-                <Button colorScheme="blue" width="full">
-                  View Details
-                </Button>
-              </Box>
-            ))}
-          </SimpleGrid>
-        )}
-      </Center>
+      <Flex p="4" overflow="auto">
+        <Box width="30%" pr="4">
+          <FilterComponent
+            tickets={tickets}
+            categories={categories}
+            onFilterChange={handleFilterChange}
+          />
+        </Box>
+        <Box width="70%">
+          {filteredTickets.length === 0 ? (
+            <Center>
+              <Text>No tickets available</Text>
+            </Center>
+          ) : (
+            <SimpleGrid
+              minChildWidth="350px"
+              spacing="6"
+              gap="6"
+              width="full"
+              maxWidth="1200px"
+              justifyContent="center"
+              alignItems="center"
+            >
+              {filteredTickets.map((ticket) => (
+                <TicketCard key={ticket.id} ticket={ticket} />
+              ))}
+            </SimpleGrid>
+          )}
+        </Box>
+      </Flex>
     </>
   );
 };
