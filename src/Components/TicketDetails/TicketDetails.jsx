@@ -1,53 +1,10 @@
-import { Center, Flex, Spinner, Text, Button, Card } from "@chakra-ui/react";
+'use client'
+import { Center, Flex, Spinner, Text, Button, Card, Box, Heading, Badge } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Toaster, toaster } from "../ui/toaster";
-
-const placeholderTicketSwap = {
-    event: {
-        title: "music event",
-        description: "description",
-        eventDate: "yesterday",
-        venue: {
-            capacity: 2500,
-            location: {
-                country: "country",
-                city: "city",
-                address: "address",
-            },
-        },
-        eventEntity: {
-            name: "artist",
-        },
-    },
-    status: "SWAP",
-    description: "a music event",
-    category: "music",
-    price: 0
-}
-
-const placeholderTicketSell = {
-    event: {
-        title: "music event",
-        description: "description",
-        eventDate: "next week",
-        venue: {
-            capacity: 2500,
-            location: {
-                country: "country",
-                city: "city",
-                address: "address",
-            },
-        },
-        eventEntity: {
-            name: "artist",
-        },
-    },
-    status: "SELL",
-    description: "a music event",
-    category: "music",
-    price: 1000
-}
+import { PopoverBody, PopoverContent, PopoverRoot, PopoverTrigger } from "../ui/popover";
+import { MdCalendarToday, MdLocationOn } from "react-icons/md";
 
 export default function TicketDetails () {
     const params = useParams();
@@ -55,6 +12,34 @@ export default function TicketDetails () {
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [open, setOpen] = useState(false);
+
+    const getCategoryColor = (categoryId) => {
+        switch (categoryId) {
+          case 1:
+            return "blue.500";
+          case 4:
+            return "green.500";
+          case 5:
+            return "purple.500";
+          case 6:
+            return "orange.500";
+          case 7:
+            return "red.500";
+          default:
+            return "gray.500";
+        }
+      };
+
+      const formatEventDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
+      };
 
     useEffect(() => {
         const fetchTicket = async () => {
@@ -77,7 +62,6 @@ export default function TicketDetails () {
                 type: "error",
             });
         } finally {
-            setTicket(placeholderTicketSwap);
             setLoading(false);
           }
         };
@@ -103,156 +87,249 @@ export default function TicketDetails () {
         )
     }
 
-    console.log(ticket.status);
+    console.log(ticket)
 
     if (ticket.status === "SWAP") {
         return (
-            <Card.Root>
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event name
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.title}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Category
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.category}
-                        </Card.Body>
-                    </Flex>
-                </Flex>
+            <>
+                <Card.Root bg={"none"} marginTop={"10px"} border={"none"} gap={"10px"}>
+                <Box
+                  width="500px"
+                  borderWidth="1px"
+                  borderRadius="xl"
+                  overflow="hidden"
+                  p="6"
+                  boxShadow="md"
+                  bg="white"
+                  alignItems={"center"}
+                  alignSelf={"center"}
+                >
+                    <Heading textAlign={"center"} size={"4xl"}>
+                        {ticket.event.title}
+                    </Heading>
+                </Box>
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Artist
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventEntity.name}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Description
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.description}
-                        </Card.Body>
-                    </Flex>
-                </Flex>
+                <Box
+                  width="700px"
+                  borderWidth="1px"
+                  borderRadius="4xl"
+                  overflow="hidden"
+                  p="6"
+                  boxShadow="md"
+                  bg="white"
+                  alignItems={"center"}
+                  alignSelf={"center"}
+                >
+                    <Flex gap={"25px"} flexDirection={"column"}>
+                        <Flex justifyContent={"space-between"}>
+                            <Text fontWeight={"bold"}>
+                                {ticket.event.eventEntity.name}
+                            </Text>
+                            <Badge
+                            bgColor={getCategoryColor(ticket.categories[0]?.id)}
+                            color="white"
+                            px="2"
+                            py="1"
+                            borderRadius="md"
+                            fontSize="sm"
+                            >
+                                {ticket.categories[0]?.name}
+                            </Badge>
+                        </Flex>
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event time
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventDate}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Adress
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            <Text>
-                                {ticket.event.venue.location.country}
+                        <Flex textAlign={"center"}>
+                            <MdLocationOn size={"50px"}/>
+                            <Text fontSize={"3xl"} width={"full"}>
+                            {ticket.event.venue.location.address},{" "}
+                            {ticket.event.venue.location.city},{" "}
+                            {ticket.event.venue.location.country}
                             </Text>
-                            <Text>
-                                {ticket.event.venue.location.city}
-                            </Text>
-                            <Text>
-                                {ticket.event.venue.location.address}
-                            </Text>
-                        </Card.Body>
-                    </Flex>
-                </Flex>
+                        </Flex>
 
-                <Button width={"10%"} alignSelf={"center"} variant={"solid"} colorPalette={"green"}>Swap</Button>
-            </Card.Root>
+                        <Flex textAlign={"center"}>
+                            <MdCalendarToday size={"50px"}/>
+                                <Text fontSize={"3xl"} width={"full"}>
+                                {formatEventDate(ticket.event.eventDate)}
+                            </Text>
+                        </Flex>
+
+                        <Flex flexDirection={"column"}>
+                            <Heading>
+                                {ticket.description ? "Description" : ""}
+                            </Heading>
+                            <Text bg={"blue.800"} borderRadius={"lg"} padding={"5px"} color={"white"} width={"fit-content"}>
+                                {ticket.description}
+                            </Text>
+                        </Flex>
+
+                        <Flex justifyContent={"space-between"}>
+                            <Card.Root border={"none"} width={"40%"}>
+                                <Card.Header paddingLeft={"0"}>
+                                    <Heading>
+                                        Posted by
+                                    </Heading>
+                                </Card.Header>
+                                <Card.Body >
+                                    {ticket.postedByUser.username}
+                                </Card.Body>
+                            </Card.Root>
+                            <PopoverRoot open={open} onOpenChange={(e) => setOpen(e.open)}>
+                                <PopoverTrigger asChild>
+                                    <Button width={"20% "} alignSelf={"center"} variant={"solid"} colorPalette={"gray"}>Swap</Button>
+                                </PopoverTrigger>
+                                <PopoverContent>
+                                    <PopoverBody>
+                                        <Heading size={"md"} textAlign={"center"} marginBottom={"10px"}>
+                                            Are you sure you want to swap?
+                                        </Heading>
+                                        <Flex justifyContent={"space-around"}>
+                                            <Button alignSelf={"center"} onClick={() => setOpen(false)} variant={"solid"} colorPalette={"green"}>Confirm</Button>
+                                            <Button alignSelf={"center"} onClick={() => setOpen(false)} variant={"solid"} colorPalette={"red"}>Cancel</Button>
+                                        </Flex>
+                                    </PopoverBody>
+                                </PopoverContent>
+                            </PopoverRoot>
+                            <Card.Root border={"none"} width={"40%"}>
+                                <Card.Header textAlign={"right"} paddingRight={"0"}>
+                                    <Heading>
+                                        Posted at
+                                    </Heading>
+                                </Card.Header>
+                                <Card.Body textAlign={"right"}>
+                                    {formatEventDate(ticket.postedAt)}
+                                </Card.Body>
+                            </Card.Root>
+                        </Flex>
+                    </Flex>
+
+                </Box>
+                </Card.Root>
+            </>
         )
     }
 
     if (ticket.status === "SELL") {
         return (
-            <Card.Root>
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event name
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.title}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Category
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.category}
-                        </Card.Body>
-                    </Flex>
-                </Flex>
+            <>
+                <Card.Root bg={"none"} marginTop={"10px"} border={"none"} gap={"10px"}>
+                <Box
+                  width="500px"
+                  borderWidth="1px"
+                  borderRadius="xl"
+                  overflow="hidden"
+                  p="6"
+                  boxShadow="md"
+                  bg="white"
+                  alignItems={"center"}
+                  alignSelf={"center"}
+                >
+                    <Heading textAlign={"center"} size={"4xl"}>
+                        {ticket.event.title}
+                    </Heading>
+                </Box>
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Artist
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventEntity.name}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Description
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.description}
-                        </Card.Body>
-                    </Flex>
-                </Flex>
+                <Box
+                  width="700px"
+                  borderWidth="1px"
+                  borderRadius="4xl"
+                  overflow="hidden"
+                  p="6"
+                  boxShadow="md"
+                  bg="white"
+                  alignItems={"center"}
+                  alignSelf={"center"}
+                >
+                    <Flex gap={"5px"} flexDirection={"column"}>
+                        <Flex justifyContent={"space-between"}>
+                            <Text fontWeight={"bold"}>
+                                {ticket.event.eventEntity.name}
+                            </Text>
+                            <Badge
+                            bgColor={getCategoryColor(ticket.categories[0]?.id)}
+                            color="white"
+                            px="2"
+                            py="1"
+                            borderRadius="md"
+                            fontSize="sm"
+                            >
+                                {ticket.categories[0]?.name}
+                            </Badge>
+                        </Flex>
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event time
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventDate}
-                        </Card.Body>
+                        <Flex justifyContent={"space-around"}>
+                            <Text fontSize={"8xl"} fontWeight={"bold"}>
+                                {`${ticket.price}€`}
+                            </Text>
+                        </Flex>
+
+                        <Flex textAlign={"center"}>
+                            <MdLocationOn size={"50px"}/>
+                            <Text fontSize={"3xl"} width={"full"}>
+                            {ticket.event.venue.location.address},{" "}
+                            {ticket.event.venue.location.city},{" "}
+                            {ticket.event.venue.location.country}
+                            </Text>
+                        </Flex>
+
+                        <Flex textAlign={"center"}>
+                            <MdCalendarToday size={"50px"}/>
+                                <Text fontSize={"3xl"} width={"full"}>
+                                {formatEventDate(ticket.event.eventDate)}
+                            </Text>
+                        </Flex>
+
+                        <Flex flexDirection={"column"}>
+                            <Heading>
+                                {ticket.description ? "Description" : ""}
+                            </Heading>
+                            <Text bg={ticket.description ? "blue.800" : ""} borderRadius={"lg"} padding={"5px"} color={"white"} width={"fit-content"}>
+                                {ticket.description}
+                            </Text>
+                        </Flex>
                     </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Adress
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            <Text>
-                                {ticket.event.venue.location.country}
-                            </Text>
-                            <Text>
-                                {ticket.event.venue.location.city}
-                            </Text>
-                            <Text>
-                                {ticket.event.venue.location.address}
-                            </Text>
-                        </Card.Body>
-                    </Flex>
-                </Flex>
-                <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                    Price
-                </Card.Header>
-                <Card.Body alignItems={"center"}>
-                    {ticket.price}
-                </Card.Body>
-                <Button width={"10%"} alignSelf={"center"}>Sell</Button>
-            </Card.Root>
+
+                    <Flex justifyContent={"space-between"}>
+                            <Card.Root border={"none"} width={"40%"}>
+                                <Card.Header paddingLeft={"0"}>
+                                    <Heading>
+                                        Posted by
+                                    </Heading>
+                                </Card.Header>
+                                <Card.Body >
+                                    {ticket.postedByUser.username}
+                                </Card.Body>
+                            </Card.Root>
+                            <PopoverRoot open={open} onOpenChange={(e) => setOpen(e.open)}>
+                                <PopoverTrigger asChild>
+                                    <Button width={"20% "} alignSelf={"center"} variant={"solid"} colorPalette={"gray"}>Buy</Button>
+                                </PopoverTrigger>
+                                <PopoverContent>
+                                    <PopoverBody>
+                                        <Heading size={"md"} textAlign={"center"} marginBottom={"10px"}>
+                                            Are you sure you want to buy?
+                                        </Heading>
+                                        <Flex justifyContent={"space-around"}>
+                                            <Button alignSelf={"center"} onClick={() => setOpen(false)} variant={"solid"} colorPalette={"green"}>Confirm</Button>
+                                            <Button alignSelf={"center"} onClick={() => setOpen(false)} variant={"solid"} colorPalette={"red"}>Cancel</Button>
+                                        </Flex>
+                                    </PopoverBody>
+                                </PopoverContent>
+                            </PopoverRoot>
+                            <Card.Root border={"none"} width={"40%"}>
+                                <Card.Header textAlign={"right"} paddingRight={"0"}>
+                                    <Heading>
+                                        Posted at
+                                    </Heading>
+                                </Card.Header>
+                                <Card.Body textAlign={"right"}>
+                                    {formatEventDate(ticket.postedAt)}
+                                </Card.Body>
+                            </Card.Root>
+                        </Flex>
+
+                </Box>
+                </Card.Root>
+            </>
         )
     }
 }

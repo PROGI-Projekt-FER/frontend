@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { Toaster, toaster } from "../ui/toaster";
 import { MdCalendarToday, MdLocationOn } from "react-icons/md";
+import { Link } from 'react-router-dom'
 
 const BrowseTickets = () => {
   const [tickets, setTickets] = useState([]);
@@ -164,9 +165,11 @@ const BrowseTickets = () => {
                     {ticket.price ? `${ticket.price}€` : "TicketSwap"}
                   </Badge>
                 </Flex>
-                <Button colorScheme="blue" width="full">
-                  View Details
-                </Button>
+                <Link to={`/tickets/${ticket.id}`}>
+                  <Button colorScheme="blue" width="full">
+                    View Details
+                  </Button>
+                </Link>
               </Box>
             ))}
           </SimpleGrid>
