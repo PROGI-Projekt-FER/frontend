@@ -11,6 +11,7 @@ import BrowseTickets from "./Components/BrowseTickets/BrowseTickets";
 import Home from "./Components/Home/Home";
 import { Provider } from "./Components/ui/provider";
 import NavBar from "./Components/NavBar/NabBar";
+import Admin from "./Components/Admin/Admin";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/browse-tickets" element={<BrowseTickets />} />
           <Route path="/home" element={<Home />} />
           <Route path="/login" element={<LoginSignup />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </Router>
     </Provider>
