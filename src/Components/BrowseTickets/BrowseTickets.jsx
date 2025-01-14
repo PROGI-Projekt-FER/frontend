@@ -7,39 +7,41 @@ import { createListCollection } from "@chakra-ui/react";
 
 const BrowseTickets = () => {
   const [tickets, setTickets] = useState([]);
-  const [filteredTickets, setFilteredTickets] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(null);
+  const [loadingTickets, setLoadingTickets] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch tickets
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const response = await fetch(
-          "https://ticketswap-backend.onrender.com/api/tickets"
-        );
+  const fetchFilteredTickets = async (filters) => {
+    setLoadingTickets(true);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch tickets");
-        }
+    try {
+      const query = new URLSearchParams(filters).toString();
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/tickets?${query}`
+      );
 
-        const data = await response.json();
-        setTickets(data);
-        setFilteredTickets(data);
-      } catch (err) {
-        setError(err.message);
-        toaster.create({
-          title: "Error fetching tickets",
-          description: err.message,
-          type: "error",
-        });
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to fetch tickets");
       }
-    };
 
-    fetchTickets();
+      const data = await response.json();
+      setTickets(data);
+    } catch (err) {
+      setError(err.message);
+      toaster.create({
+        title: "Error fetching tickets",
+        description: err.message,
+        type: "error",
+      });
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
+  // Fetch tickets initially
+  useEffect(() => {
+    fetchFilteredTickets({});
   }, []);
 
   // Fetch categories
@@ -49,6 +51,11 @@ const BrowseTickets = () => {
         const response = await fetch(
           "https://ticketswap-backend.onrender.com/api/categories"
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch categories");
+        }
+
         const data = await response.json();
         const categoryList = data.map((category) => ({
           label: category.name,
@@ -60,8 +67,11 @@ const BrowseTickets = () => {
           title: "Failed to fetch categories",
           type: "error",
         });
+      } finally {
+        setLoadingCategories(false);
       }
     };
+
     fetchCategories();
   }, []);
 
@@ -85,14 +95,24 @@ const BrowseTickets = () => {
       <Toaster />
       <Flex p="4" overflow="auto">
         <Box width="30%" pr="4">
-          <FilterComponent
-            tickets={tickets}
-            categories={categories}
-            onFilterChange={handleFilterChange}
-          />
+          {categories ? (
+            <FilterComponent
+              categories={categories}
+              onFilterChange={fetchFilteredTickets}
+            />
+          ) : (
+            <Center>
+              <Spinner size="md" />
+            </Center>
+          )}
         </Box>
+
         <Box width="70%">
-          {filteredTickets.length === 0 ? (
+          {loadingTickets ? (
+            <Center>
+              <Spinner size="xl" />
+            </Center>
+          ) : tickets.length === 0 ? (
             <Center>
               <Text>No tickets available</Text>
             </Center>

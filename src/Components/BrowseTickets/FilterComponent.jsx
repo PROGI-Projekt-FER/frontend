@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Box, Stack, Button, Input, Card } from "@chakra-ui/react";
+import {
+  Box,
+  Stack,
+  Button,
+  Input,
+  Card,
+  IconButton,
+  Flex,
+} from "@chakra-ui/react";
+import { MdClose } from "react-icons/md";
 import {
   SelectContent,
   SelectItem,
@@ -11,60 +20,41 @@ import {
 import { Field } from "../ui/field";
 import { createListCollection } from "@chakra-ui/react";
 
-const FilterComponent = ({ tickets, categories, onFilterChange }) => {
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [offerType, setOfferType] = useState("");
+const FilterComponent = ({ categories, onFilterChange }) => {
+  const [categoriesFilter, setCategoriesFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [offerTypes, setOfferTypes] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
 
-  const handleFilter = () => {
-    let filteredTickets = tickets;
+  const handleApplyFilters = () => {
+    onFilterChange({
+      categories: categoriesFilter,
+      offerTypes,
+      startDate,
+      endDate,
+      priceMin,
+      priceMax,
+    });
+  };
 
-    // Filter by category if selected
-    if (selectedCategoryId) {
-      filteredTickets = filteredTickets.filter((ticket) =>
-        ticket.categories.some(
-          (category) => category.name === selectedCategoryId
-        )
-      );
-    }
-
-    // Filter by date range if provided
-    if (fromDate || toDate) {
-      filteredTickets = filteredTickets.filter((ticket) => {
-        const eventDate = new Date(ticket.event.eventDate);
-        const from = fromDate ? new Date(fromDate) : null;
-        const to = toDate ? new Date(toDate) : null;
-
-        if (from && to) {
-          return eventDate >= from && eventDate <= to;
-        }
-        if (from) {
-          return eventDate >= from;
-        }
-        if (to) {
-          return eventDate <= to;
-        }
-        return true;
-      });
-    }
-
-    onFilterChange(filteredTickets);
+  const handleReset = () => {
+    setCategoriesFilter("");
+    setStartDate("");
+    setEndDate("");
+    setOfferTypes("");
+    setPriceMin("");
+    setPriceMax("");
+    onFilterChange({});
   };
 
   const swapOrSell = createListCollection({
     items: [
-      { label: "Swap", value: "1" },
-      { label: "Sell", value: "2" },
+      { label: "Swap", value: "SWAP" },
+      { label: "Sell", value: "SELL" },
     ],
   });
-
-  const handleReset = () => {
-    setSelectedCategoryId("");
-    setFromDate("");
-    setToDate("");
-    onFilterChange(tickets); // Show all tickets
-  };
 
   return (
     <Card.Root
@@ -79,82 +69,133 @@ const FilterComponent = ({ tickets, categories, onFilterChange }) => {
       </Card.Header>
       <Card.Body>
         <Stack spacing="4">
-          {/* Offer Type Filter */}
-          <SelectRoot collection={swapOrSell} size="sm">
-            <SelectLabel>Offer Type</SelectLabel>
-            <SelectTrigger clearable>
-              <SelectValueText placeholder="Select offer Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {swapOrSell.items.map((swapOrSell) => (
-                <SelectItem
-                  item={swapOrSell}
-                  key={swapOrSell.value}
-                  onClick={() => setOfferType(swapOrSell.value)}
-                >
-                  {swapOrSell.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </SelectRoot>
-
-          {/* Category Filter */}
-          <SelectRoot collection={categories} size="sm">
-            <SelectLabel>Category</SelectLabel>
-            <SelectTrigger>
-              <SelectValueText placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories?.items?.length > 0 ? (
-                categories.items.map((category) => (
-                  <SelectItem
-                    item={category}
-                    key={category.value}
-                    onClick={() => setSelectedCategoryId(category.id)}
-                  >
-                    {category.label}
+          <Flex align="center">
+            <SelectRoot
+              collection={swapOrSell}
+              size="sm"
+              onValueChange={(item) => setOfferTypes(item.value || "")}
+            >
+              <SelectLabel>Offer Type</SelectLabel>
+              <SelectTrigger clearable>
+                <SelectValueText placeholder="Select offer Type" />
+              </SelectTrigger>
+              <SelectContent>
+                {swapOrSell.items.map((item) => (
+                  <SelectItem item={item} key={item.value}>
+                    {item.label}
                   </SelectItem>
-                ))
-              ) : (
-                <SelectItem
-                  item={{ label: "No categories available", value: "" }}
-                  disabled
-                >
-                  No categories available
-                </SelectItem>
-              )}
-            </SelectContent>
-          </SelectRoot>
+                ))}
+              </SelectContent>
+            </SelectRoot>
+          </Flex>
+
+          <Flex align="center">
+            <SelectRoot
+              collection={categories}
+              size="sm"
+              onValueChange={(item) => setCategoriesFilter(item.value || "")}
+            >
+              <SelectLabel>Category</SelectLabel>
+              <SelectTrigger clearable>
+                <SelectValueText placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories?.items?.length > 0 ? (
+                  categories.items.map((category) => (
+                    <SelectItem item={category} key={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem
+                    item={{ label: "No categories available", value: "" }}
+                    disabled
+                  >
+                    No categories available
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </SelectRoot>
+          </Flex>
 
           {/* Date Range Filters */}
-          <Field label="From Date">
-            <Input
-              type="datetime-local"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-            />
-          </Field>
-          <Field label="To Date">
-            <Input
-              type="datetime-local"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-            />
-          </Field>
+          <Flex align="center">
+            <Field label="From Date">
+              <Input
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </Field>
+            {startDate && (
+              <IconButton
+                ml="2"
+                size="sm"
+                icon={<MdClose />}
+                onClick={() => setStartDate("")}
+                aria-label="Clear from date"
+              />
+            )}
+          </Flex>
+          <Flex align="center">
+            <Field label="To Date">
+              <Input
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </Field>
+            {endDate && (
+              <IconButton
+                ml="2"
+                size="sm"
+                icon={<MdClose />}
+                onClick={() => setEndDate("")}
+                aria-label="Clear to date"
+              />
+            )}
+          </Flex>
+
+          {/* Price Range Filters */}
+          <Flex align="center" gap="4">
+            <Field label="Min Price">
+              <Input
+                type="number"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                placeholder="Enter minimum price"
+              />
+            </Field>
+            <Field label="Max Price">
+              <Input
+                type="number"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                placeholder="Enter maximum price"
+              />
+            </Field>
+          </Flex>
         </Stack>
       </Card.Body>
       <Card.Footer>
         <Stack direction="row" spacing="4" w="full">
+          <Button colorScheme="gray" onClick={handleReset} flex="1">
+            Reset Filters
+          </Button>
           <Button
             colorScheme="blue"
-            onClick={handleFilter}
-            isDisabled={!selectedCategoryId && !fromDate && !toDate}
+            onClick={handleApplyFilters}
+            isDisabled={
+              !categoriesFilter &&
+              !startDate &&
+              !endDate &&
+              !offerTypes &&
+              !priceMin &&
+              !priceMax
+            }
             flex="1"
           >
             Apply Filters
-          </Button>
-          <Button colorScheme="gray" onClick={handleReset} flex="1">
-            Reset Filters
           </Button>
         </Stack>
       </Card.Footer>

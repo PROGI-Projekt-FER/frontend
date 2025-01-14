@@ -58,6 +58,16 @@ const Navbar = () => {
           </>
         )}
 
+        {user && (
+          <Link
+            onClick={() => navigate("/profile")}
+            fontWeight="bold"
+            color="white"
+          >
+            Profile{" "}
+          </Link>
+        )}
+
         {user ? (
           <Button
             variant="outline"
