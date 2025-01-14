@@ -7,100 +7,122 @@ import {
   Image,
   Text,
   Link,
-  Card,
+  Spinner,
 } from "@chakra-ui/react";
 
 import google_icon from "../Assets/google.png";
 
 const LoginSignup = () => {
-  const [action, setAction] = useState("Login");
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get("username");
-  const email = urlParams.get("email");
+  useEffect(() => {
+    async function fetchUserInfo() {
+      try {
+        const response = await fetch(
+          "https://ticketswap-backend.onrender.com/api/users/info",
+          { credentials: "include" }
+        );
 
-  if (username && email) {
-    createSession(username, email);
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          localStorage.setItem("loggedInUser", JSON.stringify(userData));
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUserInfo();
+  }, []);
+
+  async function logout() {
+    try {
+      const response = await fetch(
+        "https://ticketswap-backend.onrender.com/api/logout",
+        {
+          method: "POST",
+          credentials: "include", // Ensures cookies or session tokens are sent
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        localStorage.removeItem("loggedInUser");
+        setUser(null);
+        window.location.href = "/";
+      } else {
+        console.error("Failed to log out:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   }
 
-  function createSession(username, email) {
-    localStorage.setItem("loggedInUser", JSON.stringify({ username, email }));
-    window.location.href = "/";
+  if (loading) {
+    return (
+      <Flex alignItems="center" justifyContent="center" height="100vh" p="4">
+        <Spinner size="xl" />
+      </Flex>
+    );
   }
-
-  function isUserLoggedIn() {
-    const user = localStorage.getItem("loggedInUser");
-    return user !== null;
-  }
-
-  function getLoggedInUser() {
-    const user = localStorage.getItem("loggedInUser");
-    return user ? JSON.parse(user) : null;
-  }
-
-  function logout() {
-    localStorage.clear();
-    window.location.href = "/";
-  }
-
-  const user = getLoggedInUser();
-  const isLoggedIn = isUserLoggedIn();
 
   return (
     <Flex alignItems="center" justifyContent="center" height="100vh" p="4">
-      <Card.Root
+      <Box
         width={["90%", "400px"]}
         p="6"
         borderRadius="lg"
         boxShadow="lg"
         bg="white"
       >
-        <Card.Body>
-          {isLoggedIn ? (
-            <>
-              <Heading size="md" mb="4">
-                Logged in as {user.username}
-              </Heading>
-              <Text mb="4">Email: {user.email}</Text>
-            </>
-          ) : (
-            <>
-              <Box textAlign="center" mb="4">
-                <Heading size="lg">{action}</Heading>
-              </Box>
-              <Link
-                href="https://ticketswap-backend.onrender.com/oauth2/authorization/google"
-                _hover={{ textDecoration: "none" }}
-                width="full"
-              >
-                <Button
-                  colorScheme="blue"
-                  variant="solid"
-                  width="full"
-                  py="6"
-                  borderRadius="md"
-                >
-                  <Image
-                    src={google_icon}
-                    alt="Google Icon"
-                    boxSize="24px"
-                    mr="2"
-                    display="inline-block"
-                  />
-                  Continue with Google
-                </Button>
-              </Link>
-            </>
-          )}
-        </Card.Body>
-        {isLoggedIn && (
-          <Card.Footer>
+        {user ? (
+          <>
+            <Heading size="md" mb="4">
+              Logged in as {user.username || "Unknown User"}
+            </Heading>
+            <Text mb="4">Email: {user.email || "Unknown Email"}</Text>
             <Button colorScheme="red" width="full" onClick={logout}>
               Logout
             </Button>
-          </Card.Footer>
+          </>
+        ) : (
+          <>
+            <Box textAlign="center" mb="4">
+              <Heading size="lg">Login</Heading>
+            </Box>
+            <Link
+              href="https://ticketswap-backend.onrender.com/oauth2/authorization/google"
+              _hover={{ textDecoration: "none" }}
+              width="full"
+            >
+              <Button
+                colorScheme="blue"
+                variant="solid"
+                width="full"
+                py="6"
+                borderRadius="md"
+              >
+                <Image
+                  src={google_icon}
+                  alt="Google Icon"
+                  boxSize="24px"
+                  mr="2"
+                  display="inline-block"
+                />
+                Continue with Google
+              </Button>
+            </Link>
+          </>
         )}
-      </Card.Root>
+      </Box>
     </Flex>
   );
 };

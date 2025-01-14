@@ -147,7 +147,7 @@ const ProfileEdit = () => {
             />
             <Heading size="md">Edit Profile</Heading>
             <Field label="Email">
-              <Text color="gray.500">{userInfo.email || ""}</Text>{" "}
+              <Text color="gray.500">{userInfo.email || ""}</Text>
             </Field>
             <Field label="First Name">
               <Input

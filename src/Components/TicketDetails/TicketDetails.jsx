@@ -1,258 +1,474 @@
-import { Center, Flex, Spinner, Text, Button, Card } from "@chakra-ui/react";
+import {
+  Center,
+  Flex,
+  Spinner,
+  Text,
+  Button,
+  Card,
+  Box,
+  Heading,
+  Badge,
+} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Toaster, toaster } from "../ui/toaster";
+import {
+  DialogActionTrigger,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+} from "../ui/select";
+import { MdCalendarToday, MdLocationOn } from "react-icons/md";
+import { createListCollection } from "@chakra-ui/react";
 
-const placeholderTicketSwap = {
-    event: {
-        title: "music event",
-        description: "description",
-        eventDate: "yesterday",
-        venue: {
-            capacity: 2500,
-            location: {
-                country: "country",
-                city: "city",
-                address: "address",
-            },
-        },
-        eventEntity: {
-            name: "artist",
-        },
-    },
-    status: "SWAP",
-    description: "a music event",
-    category: "music",
-    price: 0
-}
+export default function TicketDetails() {
+  const params = useParams();
 
-const placeholderTicketSell = {
-    event: {
-        title: "music event",
-        description: "description",
-        eventDate: "next week",
-        venue: {
-            capacity: 2500,
-            location: {
-                country: "country",
-                city: "city",
-                address: "address",
-            },
-        },
-        eventEntity: {
-            name: "artist",
-        },
-    },
-    status: "SELL",
-    description: "a music event",
-    category: "music",
-    price: 1000
-}
+  const [ticket, setTicket] = useState(null);
+  const [myTickets, setMyTickets] = useState(null);
+  const [requestingTicketID, setRequestingTicketID] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [open, setOpen] = useState(false);
 
-export default function TicketDetails () {
-    const params = useParams();
+  const formatEventDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
+  };
 
-    const [ticket, setTicket] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const fetchTicket = async () => {
-          try {
-            const response = await fetch(
-              `https://ticketswap-backend.onrender.com/api/tickets/${params.slug}`
-            );
-    
-            if (!response.ok) {
-              throw new Error("Failed to fetch ticket");
-            }
-    
-            const data = await response.json();
-            setTicket(data);
-        } catch (err) {
-            setError(err.message);
-            toaster.create({
-                title: "Error fetching ticket",
-                description: err.message,
-                type: "error",
-            });
-        } finally {
-            setTicket(placeholderTicketSwap);
-            setLoading(false);
-          }
-        };
-    
-        fetchTicket();
-        }, [params.slug]);
-
-    if (loading) {
-        return (
-        <>
-            <Toaster />
-      
-            <Center h="100vh">
-                <Spinner size="xl" />
-            </Center>
-        </>
+  useEffect(() => {
+    const fetchTicket = async () => {
+      try {
+        const response = await fetch(
+          `https://ticketswap-backend.onrender.com/api/tickets/${params.slug}`
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch ticket");
+        }
+
+        const data = await response.json();
+        setTicket(data);
+      } catch (err) {
+        setError(err.message);
+        toaster.create({
+          title: "Error fetching ticket",
+          description: err.message,
+          type: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTicket();
+  }, [params.slug]);
+
+  useEffect(() => {
+    const fetchMyTickets = async () => {
+      try {
+        const response = await fetch(
+          "https://ticketswap-backend.onrender.com/api/users/tickets",
+          { credentials: "include" }
+        );
+        const data = await response.json();
+        console.log(data);
+
+        const myTicketsList = data.map((ticket) => ({
+          label:
+            ticket.event.title +
+            " - " +
+            formatEventDate(ticket.event.eventDate),
+          category: ticket.categories[0],
+          value: ticket.id.toString(),
+        }));
+        setMyTickets(createListCollection({ items: myTicketsList }));
+      } catch (error) {
+        toaster.create({
+          title: "Failed to fetch my tikcets",
+          type: "error",
+        });
+      }
+    };
+    fetchMyTickets();
+  }, []);
+
+  const handleSellConfirm = async () => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/tickets/${ticket.id}/buy`,
+        {
+          credentials: "include",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.log(response);
+        throw new Error("Failed to complete the action. Please try again.");
+      }
+
+      toaster.create({
+        title: "Success",
+        description: "Action completed successfully.",
+        type: "success",
+      });
+      setOpen(false);
+    } catch (err) {
+      setOpen(false);
+
+      toaster.create({
+        title: "Error",
+        description: err.message,
+        type: "error",
+      });
     }
+  };
 
-    if (!ticket) {
-        return(
-            <Text>Ticket doesn't exist</Text>
-        )
+  const handleSwapConfirm = async () => {
+    try {
+      const requestBody = {
+        requestingTicketId: requestingTicketID,
+        receivingTicketId: ticket.id,
+      };
+
+      // Make the POST request to the API endpoint
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/request`,
+        {
+          credentials: "include",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to initiate swap. Please try again.");
+      }
+
+      toaster.create({
+        title: "Success",
+        description: "Swap request initiated successfully.",
+        type: "success",
+      });
+      setOpen(false);
+    } catch (err) {
+      // Handle errors
+      setOpen(false);
+      toaster.create({
+        title: "Error",
+        description: err.message,
+        type: "error",
+      });
     }
+  };
 
-    console.log(ticket.status);
+  if (loading) {
+    return (
+      <>
+        <Toaster />
+        <Center h="100vh">
+          <Spinner size="xl" />
+        </Center>
+      </>
+    );
+  }
 
-    if (ticket.status === "SWAP") {
-        return (
-            <Card.Root>
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event name
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.title}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Category
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.category}
-                        </Card.Body>
-                    </Flex>
+  if (!ticket) {
+    return <Text>Ticket doesn't exist</Text>;
+  }
+
+  const renderTicketDetails = (status) => {
+    const buttonText = status === "SWAP" ? "Swap" : "Buy";
+
+    return (
+      <>
+        {" "}
+        <Toaster />
+        <Center h="86vh">
+          <Card.Root
+            bg={"none"}
+            marginTop={"10px"}
+            border={"none"}
+            gap={"10px"}
+          >
+            <Box
+              width="700px"
+              borderWidth="1px"
+              borderRadius="xl"
+              overflow="hidden"
+              p="6"
+              boxShadow="md"
+              bg="white"
+              alignItems={"center"}
+              alignSelf={"center"}
+            >
+              <Heading textAlign={"center"} size={"4xl"}>
+                {ticket.event.title}
+              </Heading>
+            </Box>
+
+            <Box
+              width="700px"
+              borderWidth="1px"
+              borderRadius="4xl"
+              overflow="hidden"
+              p="6"
+              boxShadow="md"
+              bg="white"
+              alignItems={"center"}
+              alignSelf={"center"}
+            >
+              <Flex gap={"25px"} flexDirection={"column"}>
+                <Flex justifyContent={"space-between"}>
+                  <Text fontWeight={"bold"} fontSize={"md"}>
+                    {ticket.event.eventEntity.name}
+                  </Text>
+                  <Badge
+                    bgColor={ticket.categories[0]?.colorHexCode}
+                    color="white"
+                    px="2"
+                    py="1"
+                    borderRadius="md"
+                    fontSize="sm"
+                  >
+                    {ticket.categories[0]?.name}
+                  </Badge>
                 </Flex>
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Artist
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventEntity.name}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Description
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.description}
-                        </Card.Body>
-                    </Flex>
+                <Flex
+                  justifyContent={"space-between"}
+                  alignItems={"flex-start"}
+                  direction={"column"}
+                  gap={"10px"}
+                >
+                  <Flex alignItems="center">
+                    <MdLocationOn size={"30px"} />
+                    <Text fontSize={"lg"} marginLeft="8px">
+                      {ticket.event.venue.location.address},{" "}
+                      {ticket.event.venue.location.city},{" "}
+                      {ticket.event.venue.location.country}
+                    </Text>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <MdCalendarToday size={"30px"} />
+                    <Text fontSize={"lg"} marginLeft="8px">
+                      {formatEventDate(ticket.event.eventDate)}
+                    </Text>
+                  </Flex>
                 </Flex>
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event time
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventDate}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Adress
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            <Text>
-                                {ticket.event.venue.location.country}
-                            </Text>
-                            <Text>
-                                {ticket.event.venue.location.city}
-                            </Text>
-                            <Text>
-                                {ticket.event.venue.location.address}
-                            </Text>
-                        </Card.Body>
-                    </Flex>
-                </Flex>
+                {ticket.description && (
+                  <Flex flexDirection={"column"}>
+                    <Heading>Description</Heading>
+                    <Text
+                      bg={"blue.800"}
+                      borderRadius={"lg"}
+                      padding={"5px"}
+                      color={"white"}
+                      width={"fit-content"}
+                    >
+                      {ticket.description}
+                    </Text>
+                  </Flex>
+                )}
 
-                <Button width={"10%"} alignSelf={"center"} variant={"solid"} colorPalette={"green"}>Swap</Button>
-            </Card.Root>
-        )
-    }
+                {status === "SWAP" ? (
+                  <Flex justifyContent={"center"}>
+                    <Text fontSize={"lg"} fontWeight={"bold"}>
+                      User is looking to swap for a ticket in this category:{" "}
+                      <Badge
+                        bgColor={ticket.interestedInCategories[0]?.colorHexCode}
+                        color="white"
+                        px="2"
+                        py="1"
+                        borderRadius="md"
+                        fontSize="sm"
+                      >
+                        {ticket.interestedInCategories[0]?.name}
+                      </Badge>
+                    </Text>
+                  </Flex>
+                ) : (
+                  <Flex justifyContent={"center"}>
+                    <Text fontSize={"4xl"} fontWeight={"bold"}>
+                      {`${ticket.price}€`}
+                    </Text>
+                  </Flex>
+                )}
 
-    if (ticket.status === "SELL") {
-        return (
-            <Card.Root>
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event name
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.title}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Category
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.category}
-                        </Card.Body>
-                    </Flex>
-                </Flex>
+                <Flex justifyContent={"space-between"}>
+                  <Card.Root border={"none"} width={"40%"}>
+                    <Card.Header paddingLeft={"0"}>
+                      <Heading>Posted by</Heading>
+                    </Card.Header>
+                    <Card.Body padding={"0"}>
+                      {ticket.postedByUser.username}
+                    </Card.Body>
+                  </Card.Root>
+                  <DialogRoot>
+                    <DialogTrigger asChild>
+                      <Button
+                        width={"20%"}
+                        alignSelf={"center"}
+                        variant={"solid"}
+                        colorPalette={"gray"}
+                      >
+                        {buttonText}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>
+                          {ticket.status === "SWAP"
+                            ? "Confirm Swap"
+                            : "Confirm Purchase"}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <DialogBody>
+                        {ticket.status === "SWAP" ? (
+                          <Box>
+                            <Text>
+                              Are you sure you want to initiate a swap? This
+                              user is looking for a ticket in category{" "}
+                              <Badge
+                                bgColor={
+                                  ticket.interestedInCategories[0]?.colorHexCode
+                                }
+                                color="white"
+                                px="2"
+                                py="1"
+                                borderRadius="md"
+                                fontSize="sm"
+                              >
+                                {ticket.interestedInCategories[0]?.name}
+                              </Badge>
+                              .
+                            </Text>
+                            <SelectRoot
+                              collection={myTickets}
+                              size="sm"
+                              marginTop={"10px"}
+                            >
+                              <SelectLabel>
+                                Select your ticket you want to swap
+                              </SelectLabel>
+                              <SelectTrigger>
+                                <SelectValueText placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent zIndex={1500}>
+                                {myTickets?.items?.length > 0 ? (
+                                  myTickets.items.map((ticket) => (
+                                    <SelectItem
+                                      item={ticket}
+                                      key={ticket.value}
+                                      onClick={() =>
+                                        setRequestingTicketID(ticket.value)
+                                      }
+                                    >
+                                      <Flex direction={"column"}>
+                                        <Badge
+                                          width={"fit-content"}
+                                          bgColor={
+                                            ticket.category?.colorHexCode
+                                          }
+                                          color="white"
+                                          px="2"
+                                          py="1"
+                                          borderRadius="md"
+                                          fontSize="sm"
+                                        >
+                                          {ticket.category?.name}
+                                        </Badge>
+                                        {ticket.label}
+                                      </Flex>
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem
+                                    item={{
+                                      label: "No categories available",
+                                      value: "",
+                                    }}
+                                    disabled
+                                  >
+                                    No categories available
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </SelectRoot>
+                          </Box>
+                        ) : (
+                          <Text>
+                            Are you sure you want to purchase this ticket for{" "}
+                            {ticket.price}€?
+                          </Text>
+                        )}
+                      </DialogBody>
+                      <DialogFooter>
+                        <DialogActionTrigger asChild>
+                          <Button variant="solid" colorPalette="red">
+                            Cancel
+                          </Button>
+                        </DialogActionTrigger>
+                        <DialogActionTrigger asChild>
+                          <Button
+                            variant="solid"
+                            colorPalette="green"
+                            onClick={
+                              ticket.status === "SWAP"
+                                ? handleSwapConfirm
+                                : handleSellConfirm
+                            }
+                          >
+                            Confirm
+                          </Button>
+                        </DialogActionTrigger>
+                      </DialogFooter>
+                      <DialogCloseTrigger />
+                    </DialogContent>
+                  </DialogRoot>
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Artist
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventEntity.name}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Description
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.description}
-                        </Card.Body>
-                    </Flex>
+                  <Card.Root border={"none"} width={"40%"}>
+                    <Card.Header textAlign={"right"} paddingRight={"0"}>
+                      <Heading>Posted at</Heading>
+                    </Card.Header>
+                    <Card.Body textAlign={"right"} padding={"0"}>
+                      {formatEventDate(ticket.postedAt)}
+                    </Card.Body>
+                  </Card.Root>
                 </Flex>
+              </Flex>
+            </Box>
+          </Card.Root>
+        </Center>
+      </>
+    );
+  };
 
-                <Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Event time
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            {ticket.event.eventDate}
-                        </Card.Body>
-                    </Flex>
-                    <Flex direction={"column"} width={"50%"}>
-                        <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                            Adress
-                        </Card.Header>
-                        <Card.Body alignItems={"center"}>
-                            <Text>
-                                {ticket.event.venue.location.country}
-                            </Text>
-                            <Text>
-                                {ticket.event.venue.location.city}
-                            </Text>
-                            <Text>
-                                {ticket.event.venue.location.address}
-                            </Text>
-                        </Card.Body>
-                    </Flex>
-                </Flex>
-                <Card.Header alignItems={"center"} fontWeight={"bold"}>
-                    Price
-                </Card.Header>
-                <Card.Body alignItems={"center"}>
-                    {ticket.price}
-                </Card.Body>
-                <Button width={"10%"} alignSelf={"center"}>Sell</Button>
-            </Card.Root>
-        )
-    }
+  return renderTicketDetails(ticket.status);
 }
