@@ -1,5 +1,5 @@
 import React from "react";
-import { Flex, Box, Heading, Button, Link, } from "@chakra-ui/react";
+import { Flex, Box, Heading, Button, Link } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
@@ -30,22 +30,40 @@ const Navbar = () => {
       </Heading>
 
       <Flex alignItems="center" gap="4">
-        <Link onClick={() => navigate("/browse-tickets")} fontWeight="bold" color="white">
+        <Link
+          onClick={() => navigate("/browse-tickets")}
+          fontWeight="bold"
+          color="white"
+        >
           Browse Tickets
         </Link>
 
         {user && (
-          <Link onClick={() => navigate("/create-ticket")} fontWeight="bold" color="white">
+          <Link
+            onClick={() => navigate("/create-ticket")}
+            fontWeight="bold"
+            color="white"
+          >
             Create Tickets
           </Link>
         )}
 
         {user ? (
-          <Button variant="outline" colorScheme="whiteAlpha" onClick={handleLogout} color="white">
+          <Button
+            variant="outline"
+            colorScheme="whiteAlpha"
+            onClick={handleLogout}
+            color="white"
+          >
             Logout
           </Button>
         ) : (
-          <Button variant="outline" colorScheme="whiteAlpha" onClick={handleLogin} color="white">
+          <Button
+            variant="outline"
+            colorScheme="whiteAlpha"
+            onClick={handleLogin}
+            color="white"
+          >
             Login
           </Button>
         )}
