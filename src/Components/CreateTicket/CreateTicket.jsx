@@ -158,6 +158,7 @@ const CreateTicket = () => {
       const response = await fetch(
         "https://ticketswap-backend.onrender.com/api/tickets",
         {
+          credentials: "include",
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
