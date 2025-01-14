@@ -4,6 +4,7 @@ import { Toaster, toaster } from "../ui/toaster";
 import TicketCard from "../Shared/TicketCard.jsx";
 import FilterComponent from "./FilterComponent.jsx";
 import { createListCollection } from "@chakra-ui/react";
+import { Link } from "react-router-dom";
 
 const BrowseTickets = () => {
   const [tickets, setTickets] = useState([]);
