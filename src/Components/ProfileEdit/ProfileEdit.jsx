@@ -117,7 +117,7 @@ const ProfileEdit = () => {
     return (
       <>
         <Toaster />
-        <Center h="100vh">
+        <Center h="88vh">
           <Flex direction={"column"} align={"center"} gap={"20px"}>
             <Spinner size="xl" />
             <Text>Loading...</Text>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Box, Heading, Text, Spinner } from "@chakra-ui/react";
+import { Box, Heading, Text, Spinner, Center, Flex } from "@chakra-ui/react";
 import MyTicketsTable from "./MyTicketsTable";
 import MySwapRequests from "./MySwapRequests";
+import MyTransactionHistory from "./MyTransactionHistory";
+
 import { Separator } from "@chakra-ui/react";
 
 const MyTickets = () => {
@@ -36,8 +38,12 @@ const MyTickets = () => {
   if (loading) {
     return (
       <Box p={4}>
-        <Spinner size="xl" />
-        <Text>Loading tickets...</Text>
+        <Center h="88vh">
+          <Flex direction={"column"} align={"center"} gap={"20px"}>
+            <Spinner size="xl" />
+            <Text>Loading...</Text>
+          </Flex>
+        </Center>
       </Box>
     );
   }
@@ -56,9 +62,10 @@ const MyTickets = () => {
         My Tickets
       </Heading>
       <MyTicketsTable tickets={tickets} />
-      <Separator my={4} />
+      <Separator marginTop={"8px"} marginBottom={"8px"} />
       <MySwapRequests tickets={tickets} />
-      <Separator my={4} />
+      <Separator marginTop={"8px"} marginBottom={"8px"} />
+      <MyTransactionHistory tickets={tickets} />
     </Box>
   );
 };

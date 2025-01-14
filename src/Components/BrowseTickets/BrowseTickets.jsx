@@ -76,21 +76,6 @@ const BrowseTickets = () => {
     fetchCategories();
   }, []);
 
-  const handleFilterChange = (filteredData) => {
-    setFilteredTickets(filteredData);
-  };
-
-  if (loading) {
-    return (
-      <>
-        <Toaster />
-        <Center h="100vh">
-          <Spinner size="xl" />
-        </Center>
-      </>
-    );
-  }
-
   return (
     <>
       <Toaster />
@@ -127,7 +112,7 @@ const BrowseTickets = () => {
               justifyContent="center"
               alignItems="center"
             >
-              {filteredTickets.map((ticket) => (
+              {tickets.map((ticket) => (
                 <TicketCard key={ticket.id} ticket={ticket} />
               ))}
             </SimpleGrid>

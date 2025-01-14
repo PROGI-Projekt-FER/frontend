@@ -167,7 +167,7 @@ const EditTicket = () => {
 
   if (loading) {
     return (
-      <Center h="100vh">
+      <Center h="88vh">
         <Spinner size="xl" />
       </Center>
     );

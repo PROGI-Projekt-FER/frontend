@@ -191,7 +191,7 @@ export default function TicketDetails() {
     return (
       <>
         <Toaster />
-        <Center h="100vh">
+        <Center h="88vh">
           <Spinner size="xl" />
         </Center>
       </>
