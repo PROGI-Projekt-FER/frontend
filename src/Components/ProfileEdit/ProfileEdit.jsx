@@ -7,14 +7,29 @@ import {
   SelectTrigger,
   SelectValueText,
 } from "../ui/select";
-import { Box, VStack, Heading, Text, Input, Button, createListCollection } from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  Heading,
+  Text,
+  Input,
+  Button,
+  createListCollection,
+  Center,
+  Spinner,
+  Flex,
+} from "@chakra-ui/react";
+import { Field } from "../ui/field";
+
 import { Toaster, toaster } from "../ui/toaster";
 import { Avatar } from "../ui/avatar";
 import { useNavigate } from "react-router-dom";
 
 const ProfileEdit = () => {
   const [userInfo, setUserInfo] = useState(null); // State to store user info
-  const [categories, setCategories] = useState(createListCollection({ items: [] })); // State for categories
+  const [categories, setCategories] = useState(
+    createListCollection({ items: [] })
+  ); // State for categories
   const [error, setError] = useState(null); // State for errors
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -58,19 +73,11 @@ const ProfileEdit = () => {
   }, []);
 
   const handleInputChange = (field, value) => {
-    if (field === "preferredCategory") {
-      // Find the selected category object by ID
-      const selectedCategory = categories.items.find((category) => category.value === value);
-      setUserInfo((prev) => ({
-        ...prev,
-        preferredCategory: selectedCategory, // Store the entire category object
-      }));
-    } else {
-      setUserInfo((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    }  
+    console.log(value);
+    setUserInfo((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const handleSave = async () => {
@@ -107,62 +114,93 @@ const ProfileEdit = () => {
   };
 
   if (!userInfo) {
-    return <Text>Loading...</Text>; // Show a loading message while fetching data
+    return (
+      <>
+        <Toaster />
+        <Center h="100vh">
+          <Flex direction={"column"} align={"center"} gap={"20px"}>
+            <Spinner size="xl" />
+            <Text>Loading...</Text>
+          </Flex>
+        </Center>
+      </>
+    );
   }
 
   return (
-    <Box p="6" maxW="400px" mx="auto" bg="gray.50" borderRadius="md" boxShadow="md">
-      <VStack>
-        <Avatar
-          size="lg"
-          name={`${userInfo?.firstName || ""} ${userInfo?.lastName || ""}`}
-          src={userInfo?.profilePicUrl}
-        />
-
-        <Heading size="md">Edit Profile</Heading>
-
-        <Input
-          placeholder="First Name"
-          value={userInfo.firstName || ""}
-          onChange={(e) => handleInputChange("firstName", e.target.value)}
-        />
-        <Input
-          placeholder="Last Name"
-          value={userInfo.lastName || ""}
-          onChange={(e) => handleInputChange("lastName", e.target.value)}
-        />
-        <Input
-          placeholder="Username"
-          value={userInfo.username || ""}
-          onChange={(e) => handleInputChange("username", e.target.value)}
-        />
-        <Text color="gray.500">{userInfo.email || ""}</Text> {/* Email is static */}
-
-        {
-          <SelectRoot collection={categories} size="sm">
-            <SelectLabel>Preferred Category</SelectLabel>
-            <SelectTrigger>
-              <SelectValueText placeholder="Select preferred category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.items.map((category) => (
-                <SelectItem
-                  item={category}
-                  key={category.value}
-                  onClick={() => handleInputChange("preferredCategory", category.value)}
-                >
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </SelectRoot>
-        }
-
-        <Button colorScheme="blue" size="sm" onClick={handleSave}>
-          Save
-        </Button>
-      </VStack>
-    </Box>
+    <>
+      <Toaster />
+      <Center h="88vh">
+        <Box
+          p="6"
+          width="400px"
+          mx="auto"
+          bg="gray.50"
+          borderRadius="md"
+          boxShadow="md"
+        >
+          <VStack>
+            <Avatar
+              size="lg"
+              name={`${userInfo?.firstName || ""} ${userInfo?.lastName || ""}`}
+              src={userInfo?.profilePicUrl}
+            />
+            <Heading size="md">Edit Profile</Heading>
+            <Field label="Email">
+              <Text color="gray.500">{userInfo.email || ""}</Text>{" "}
+            </Field>
+            <Field label="First Name">
+              <Input
+                placeholder="First Name"
+                value={userInfo.firstName || ""}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+              />
+            </Field>
+            <Field label="Last Name">
+              <Input
+                placeholder="Last Name"
+                value={userInfo.lastName || ""}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+              />
+            </Field>
+            <Field label="Username">
+              <Input
+                placeholder="Username"
+                value={userInfo.username || ""}
+                onChange={(e) => handleInputChange("username", e.target.value)}
+              />
+            </Field>
+            {
+              <SelectRoot collection={categories} size="sm">
+                <SelectLabel>Preferred Category</SelectLabel>
+                <SelectTrigger>
+                  <SelectValueText placeholder="Select preferred category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.items.map((category) => (
+                    <SelectItem
+                      item={category}
+                      key={category.value}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "preferredCategory",
+                          e.target.value.id
+                        )
+                      }
+                    >
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </SelectRoot>
+            }
+            <Button colorScheme="blue" size="sm" onClick={handleSave}>
+              Save
+            </Button>
+          </VStack>
+        </Box>
+      </Center>
+    </>
   );
 };
 
