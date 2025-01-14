@@ -13,17 +13,33 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Toaster, toaster } from "../ui/toaster";
 import {
-  PopoverBody,
-  PopoverContent,
-  PopoverRoot,
-  PopoverTrigger,
-} from "../ui/popover";
+  DialogActionTrigger,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectRoot,
+  SelectTrigger,
+  SelectValueText,
+} from "../ui/select";
 import { MdCalendarToday, MdLocationOn } from "react-icons/md";
+import { createListCollection } from "@chakra-ui/react";
 
 export default function TicketDetails() {
   const params = useParams();
 
   const [ticket, setTicket] = useState(null);
+  const [myTickets, setMyTickets] = useState(null);
+  const [requestingTicketID, setRequestingTicketID] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
@@ -66,11 +82,115 @@ export default function TicketDetails() {
     fetchTicket();
   }, [params.slug]);
 
+  useEffect(() => {
+    const fetchMyTickets = async () => {
+      try {
+        const response = await fetch(
+          "https://ticketswap-backend.onrender.com/api/users/tickets",
+          { credentials: "include" }
+        );
+        const data = await response.json();
+        console.log(data);
+
+        const myTicketsList = data.map((ticket) => ({
+          label:
+            ticket.event.title +
+            " - " +
+            formatEventDate(ticket.event.eventDate),
+          category: ticket.categories[0],
+          value: ticket.id.toString(),
+        }));
+        setMyTickets(createListCollection({ items: myTicketsList }));
+      } catch (error) {
+        toaster.create({
+          title: "Failed to fetch my tikcets",
+          type: "error",
+        });
+      }
+    };
+    fetchMyTickets();
+  }, []);
+
+  const handleSellConfirm = async () => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/tickets/${ticket.id}/buy`,
+        {
+          credentials: "include",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.log(response);
+        throw new Error("Failed to complete the action. Please try again.");
+      }
+
+      toaster.create({
+        title: "Success",
+        description: "Action completed successfully.",
+        type: "success",
+      });
+      setOpen(false);
+    } catch (err) {
+      setOpen(false);
+
+      toaster.create({
+        title: "Error",
+        description: err.message,
+        type: "error",
+      });
+    }
+  };
+
+  const handleSwapConfirm = async () => {
+    try {
+      const requestBody = {
+        requestingTicketId: requestingTicketID,
+        receivingTicketId: ticket.id,
+      };
+
+      // Make the POST request to the API endpoint
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/request`,
+        {
+          credentials: "include",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to initiate swap. Please try again.");
+      }
+
+      toaster.create({
+        title: "Success",
+        description: "Swap request initiated successfully.",
+        type: "success",
+      });
+      setOpen(false);
+    } catch (err) {
+      // Handle errors
+      setOpen(false);
+      toaster.create({
+        title: "Error",
+        description: err.message,
+        type: "error",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <>
         <Toaster />
-
         <Center h="100vh">
           <Spinner size="xl" />
         </Center>
@@ -84,179 +204,269 @@ export default function TicketDetails() {
 
   const renderTicketDetails = (status) => {
     const buttonText = status === "SWAP" ? "Swap" : "Buy";
-    const onConfirm = () => setOpen(false); // Replace with actual logic
 
     return (
-      <Center h="86vh">
-        <Card.Root bg={"none"} marginTop={"10px"} border={"none"} gap={"10px"}>
-          <Box
-            width="700px"
-            borderWidth="1px"
-            borderRadius="xl"
-            overflow="hidden"
-            p="6"
-            boxShadow="md"
-            bg="white"
-            alignItems={"center"}
-            alignSelf={"center"}
+      <>
+        {" "}
+        <Toaster />
+        <Center h="86vh">
+          <Card.Root
+            bg={"none"}
+            marginTop={"10px"}
+            border={"none"}
+            gap={"10px"}
           >
-            <Heading textAlign={"center"} size={"4xl"}>
-              {ticket.event.title}
-            </Heading>
-          </Box>
+            <Box
+              width="700px"
+              borderWidth="1px"
+              borderRadius="xl"
+              overflow="hidden"
+              p="6"
+              boxShadow="md"
+              bg="white"
+              alignItems={"center"}
+              alignSelf={"center"}
+            >
+              <Heading textAlign={"center"} size={"4xl"}>
+                {ticket.event.title}
+              </Heading>
+            </Box>
 
-          <Box
-            width="700px"
-            borderWidth="1px"
-            borderRadius="4xl"
-            overflow="hidden"
-            p="6"
-            boxShadow="md"
-            bg="white"
-            alignItems={"center"}
-            alignSelf={"center"}
-          >
-            <Flex gap={"25px"} flexDirection={"column"}>
-              <Flex justifyContent={"space-between"}>
-                <Text fontWeight={"bold"} fontSize={"md"}>
-                  {ticket.event.eventEntity.name}
-                </Text>
-                <Badge
-                  bgColor={ticket.categories[0]?.colorHexCode}
-                  color="white"
-                  px="2"
-                  py="1"
-                  borderRadius="md"
-                  fontSize="sm"
-                >
-                  {ticket.categories[0]?.name}
-                </Badge>
-              </Flex>
-
-              <Flex
-                justifyContent={"space-between"}
-                alignItems={"flex-start"}
-                direction={"column"}
-                gap={"10px"}
-              >
-                <Flex alignItems="center">
-                  <MdLocationOn size={"30px"} />
-                  <Text fontSize={"lg"} marginLeft="8px">
-                    {ticket.event.venue.location.address},{" "}
-                    {ticket.event.venue.location.city},{" "}
-                    {ticket.event.venue.location.country}
+            <Box
+              width="700px"
+              borderWidth="1px"
+              borderRadius="4xl"
+              overflow="hidden"
+              p="6"
+              boxShadow="md"
+              bg="white"
+              alignItems={"center"}
+              alignSelf={"center"}
+            >
+              <Flex gap={"25px"} flexDirection={"column"}>
+                <Flex justifyContent={"space-between"}>
+                  <Text fontWeight={"bold"} fontSize={"md"}>
+                    {ticket.event.eventEntity.name}
                   </Text>
-                </Flex>
-                <Flex alignItems="center">
-                  <MdCalendarToday size={"30px"} />
-                  <Text fontSize={"lg"} marginLeft="8px">
-                    {formatEventDate(ticket.event.eventDate)}
-                  </Text>
-                </Flex>
-              </Flex>
-
-              {ticket.description && (
-                <Flex flexDirection={"column"}>
-                  <Heading>Description</Heading>
-                  <Text
-                    bg={"blue.800"}
-                    borderRadius={"lg"}
-                    padding={"5px"}
-                    color={"white"}
-                    width={"fit-content"}
+                  <Badge
+                    bgColor={ticket.categories[0]?.colorHexCode}
+                    color="white"
+                    px="2"
+                    py="1"
+                    borderRadius="md"
+                    fontSize="sm"
                   >
-                    {ticket.description}
-                  </Text>
+                    {ticket.categories[0]?.name}
+                  </Badge>
                 </Flex>
-              )}
 
-              {status === "SWAP" ? (
-                <Flex justifyContent={"center"}>
-                  <Text fontSize={"lg"} fontWeight={"bold"}>
-                    User is looking to swap for a ticket in this category:
-                    <Badge
-                      bgColor={ticket.interestedInCategories[0]?.colorHexCode}
-                      color="white"
-                      px="2"
-                      py="1"
-                      borderRadius="md"
-                      fontSize="sm"
-                    >
-                      {ticket.interestedInCategories[0]?.name}
-                    </Badge>
-                  </Text>
+                <Flex
+                  justifyContent={"space-between"}
+                  alignItems={"flex-start"}
+                  direction={"column"}
+                  gap={"10px"}
+                >
+                  <Flex alignItems="center">
+                    <MdLocationOn size={"30px"} />
+                    <Text fontSize={"lg"} marginLeft="8px">
+                      {ticket.event.venue.location.address},{" "}
+                      {ticket.event.venue.location.city},{" "}
+                      {ticket.event.venue.location.country}
+                    </Text>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <MdCalendarToday size={"30px"} />
+                    <Text fontSize={"lg"} marginLeft="8px">
+                      {formatEventDate(ticket.event.eventDate)}
+                    </Text>
+                  </Flex>
                 </Flex>
-              ) : (
-                <Flex justifyContent={"center"}>
-                  <Text fontSize={"4xl"} fontWeight={"bold"}>
-                    {`${ticket.price}€`}
-                  </Text>
-                </Flex>
-              )}
 
-              <Flex justifyContent={"space-between"}>
-                <Card.Root border={"none"} width={"40%"}>
-                  <Card.Header paddingLeft={"0"}>
-                    <Heading>Posted by</Heading>
-                  </Card.Header>
-                  <Card.Body padding={"0"}>
-                    {ticket.postedByUser.username}
-                  </Card.Body>
-                </Card.Root>
-                <PopoverRoot open={open} onOpenChange={(e) => setOpen(e.open)}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      width={"20% "}
-                      alignSelf={"center"}
-                      variant={"solid"}
-                      colorPalette={"gray"}
+                {ticket.description && (
+                  <Flex flexDirection={"column"}>
+                    <Heading>Description</Heading>
+                    <Text
+                      bg={"blue.800"}
+                      borderRadius={"lg"}
+                      padding={"5px"}
+                      color={"white"}
+                      width={"fit-content"}
                     >
-                      {buttonText}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <PopoverBody>
-                      <Heading
-                        size={"md"}
-                        textAlign={"center"}
-                        marginBottom={"10px"}
+                      {ticket.description}
+                    </Text>
+                  </Flex>
+                )}
+
+                {status === "SWAP" ? (
+                  <Flex justifyContent={"center"}>
+                    <Text fontSize={"lg"} fontWeight={"bold"}>
+                      User is looking to swap for a ticket in this category:{" "}
+                      <Badge
+                        bgColor={ticket.interestedInCategories[0]?.colorHexCode}
+                        color="white"
+                        px="2"
+                        py="1"
+                        borderRadius="md"
+                        fontSize="sm"
                       >
-                        Are you sure you want to {buttonText.toLowerCase()}?
-                      </Heading>
-                      <Flex justifyContent={"space-around"}>
-                        <Button
-                          alignSelf={"center"}
-                          onClick={onConfirm}
-                          variant={"solid"}
-                          colorPalette={"green"}
-                        >
-                          Confirm
-                        </Button>
-                        <Button
-                          alignSelf={"center"}
-                          onClick={() => setOpen(false)}
-                          variant={"solid"}
-                          colorPalette={"red"}
-                        >
-                          Cancel
-                        </Button>
-                      </Flex>
-                    </PopoverBody>
-                  </PopoverContent>
-                </PopoverRoot>
-                <Card.Root border={"none"} width={"40%"}>
-                  <Card.Header textAlign={"right"} paddingRight={"0"}>
-                    <Heading>Posted at</Heading>
-                  </Card.Header>
-                  <Card.Body textAlign={"right"} padding={"0"}>
-                    {formatEventDate(ticket.postedAt)}
-                  </Card.Body>
-                </Card.Root>
+                        {ticket.interestedInCategories[0]?.name}
+                      </Badge>
+                    </Text>
+                  </Flex>
+                ) : (
+                  <Flex justifyContent={"center"}>
+                    <Text fontSize={"4xl"} fontWeight={"bold"}>
+                      {`${ticket.price}€`}
+                    </Text>
+                  </Flex>
+                )}
+
+                <Flex justifyContent={"space-between"}>
+                  <Card.Root border={"none"} width={"40%"}>
+                    <Card.Header paddingLeft={"0"}>
+                      <Heading>Posted by</Heading>
+                    </Card.Header>
+                    <Card.Body padding={"0"}>
+                      {ticket.postedByUser.username}
+                    </Card.Body>
+                  </Card.Root>
+                  <DialogRoot>
+                    <DialogTrigger asChild>
+                      <Button
+                        width={"20%"}
+                        alignSelf={"center"}
+                        variant={"solid"}
+                        colorPalette={"gray"}
+                      >
+                        {buttonText}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>
+                          {ticket.status === "SWAP"
+                            ? "Confirm Swap"
+                            : "Confirm Purchase"}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <DialogBody>
+                        {ticket.status === "SWAP" ? (
+                          <Box>
+                            <Text>
+                              Are you sure you want to initiate a swap? This
+                              user is looking for a ticket in category{" "}
+                              <Badge
+                                bgColor={
+                                  ticket.interestedInCategories[0]?.colorHexCode
+                                }
+                                color="white"
+                                px="2"
+                                py="1"
+                                borderRadius="md"
+                                fontSize="sm"
+                              >
+                                {ticket.interestedInCategories[0]?.name}
+                              </Badge>
+                              .
+                            </Text>
+                            <SelectRoot
+                              collection={myTickets}
+                              size="sm"
+                              marginTop={"10px"}
+                            >
+                              <SelectLabel>
+                                Select your ticket you want to swap
+                              </SelectLabel>
+                              <SelectTrigger>
+                                <SelectValueText placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent zIndex={1500}>
+                                {myTickets?.items?.length > 0 ? (
+                                  myTickets.items.map((ticket) => (
+                                    <SelectItem
+                                      item={ticket}
+                                      key={ticket.value}
+                                      onClick={() =>
+                                        setRequestingTicketID(ticket.value)
+                                      }
+                                    >
+                                      <Flex direction={"column"}>
+                                        <Badge
+                                          width={"fit-content"}
+                                          bgColor={
+                                            ticket.category?.colorHexCode
+                                          }
+                                          color="white"
+                                          px="2"
+                                          py="1"
+                                          borderRadius="md"
+                                          fontSize="sm"
+                                        >
+                                          {ticket.category?.name}
+                                        </Badge>
+                                        {ticket.label}
+                                      </Flex>
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem
+                                    item={{
+                                      label: "No categories available",
+                                      value: "",
+                                    }}
+                                    disabled
+                                  >
+                                    No categories available
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </SelectRoot>
+                          </Box>
+                        ) : (
+                          <Text>
+                            Are you sure you want to purchase this ticket for{" "}
+                            {ticket.price}€?
+                          </Text>
+                        )}
+                      </DialogBody>
+                      <DialogFooter>
+                        <DialogActionTrigger asChild>
+                          <Button variant="solid" colorPalette="red">
+                            Cancel
+                          </Button>
+                        </DialogActionTrigger>
+                        <DialogActionTrigger asChild>
+                          <Button
+                            variant="solid"
+                            colorPalette="green"
+                            onClick={
+                              ticket.status === "SWAP"
+                                ? handleSwapConfirm
+                                : handleSellConfirm
+                            }
+                          >
+                            Confirm
+                          </Button>
+                        </DialogActionTrigger>
+                      </DialogFooter>
+                      <DialogCloseTrigger />
+                    </DialogContent>
+                  </DialogRoot>
+
+                  <Card.Root border={"none"} width={"40%"}>
+                    <Card.Header textAlign={"right"} paddingRight={"0"}>
+                      <Heading>Posted at</Heading>
+                    </Card.Header>
+                    <Card.Body textAlign={"right"} padding={"0"}>
+                      {formatEventDate(ticket.postedAt)}
+                    </Card.Body>
+                  </Card.Root>
+                </Flex>
               </Flex>
-            </Flex>
-          </Box>
-        </Card.Root>
-      </Center>
+            </Box>
+          </Card.Root>
+        </Center>
+      </>
     );
   };
 

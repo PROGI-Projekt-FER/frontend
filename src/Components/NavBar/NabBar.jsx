@@ -6,10 +6,31 @@ const Navbar = () => {
   const navigate = useNavigate();
   const user = localStorage.getItem("loggedInUser");
 
-  const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
+  async function handleLogout() {
+    try {
+      const response = await fetch(
+        "https://ticketswap-backend.onrender.com/api/logout",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        localStorage.removeItem("loggedInUser");
+
+        window.location.href = "/";
+      } else {
+        console.error("Failed to log out:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
     navigate("/");
-  };
+  }
 
   const handleLogin = () => {
     navigate("/login");
