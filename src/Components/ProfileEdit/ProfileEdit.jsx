@@ -104,7 +104,7 @@ const ProfileEdit = () => {
         type: "success",
       });
 
-      //navigate("/profile"); // Navigate back to the profile page
+      navigate("/profile");
     } catch (error) {
       toaster.create({
         title: error.message || "An error occurred while saving the profile",
@@ -171,23 +171,25 @@ const ProfileEdit = () => {
               />
             </Field>
             {
-              <SelectRoot collection={categories} size="sm">
+              <SelectRoot
+                collection={categories}
+                size="sm"
+                onValueChange={(item) =>
+                  handleInputChange("preferredCategoryId", item.value[0])
+                }
+                defaultValue={
+                  userInfo.preferredCategory?.id
+                    ? [userInfo.preferredCategory.id.toString()]
+                    : []
+                }
+              >
                 <SelectLabel>Preferred Category</SelectLabel>
                 <SelectTrigger>
                   <SelectValueText placeholder="Select preferred category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.items.map((category) => (
-                    <SelectItem
-                      item={category}
-                      key={category.value}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "preferredCategory",
-                          e.target.value.id
-                        )
-                      }
-                    >
+                    <SelectItem item={category} key={category.value}>
                       {category.label}
                     </SelectItem>
                   ))}
