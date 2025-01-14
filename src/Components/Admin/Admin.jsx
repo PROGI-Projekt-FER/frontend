@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Spinner,
-  Text,
-  Table,
-  Button,
-} from "@chakra-ui/react";
+import { Box, Spinner, Text, Heading, Separator } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import AdminUsersTable from "./AdminUsersTable";
+import AdminCategoriesTable from "./AdminCategoriesTable";
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -23,7 +21,6 @@ const Admin = () => {
         );
         const data = await response.json();
         setUsers(data);
-        console.log(data);
       } catch (err) {
         setError("Failed to fetch users. Please try again later.");
       } finally {
@@ -31,7 +28,22 @@ const Admin = () => {
       }
     };
 
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(
+          "https://ticketswap-backend.onrender.com/api/categories"
+        );
+        const data = await response.json();
+        setCategories(data);
+      } catch (err) {
+        setError("Failed to fetch categories. Please try again later.");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
     fetchUsers();
+    fetchCategories();
   }, []);
 
   const handleDeactivate = async (userId) => {
@@ -45,25 +57,97 @@ const Admin = () => {
       );
       if (response.ok) {
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-      } else {
-        console.error("Failed to delete user");
       }
     } catch (err) {
       console.error("Error deleting user:", err);
     }
   };
 
-  const handleGenerateIzv = async (userId) => {
+  const handleGenerateIzv = (userId) => {
+    console.log("Generate report for user", userId);
   };
 
-  const handleAddAdmin = async (userId) => {
+  const handleAddAdmin = (userId) => {
+    console.log("Make user admin", userId);
   };
 
-  if (loading) {
+  const handleAddCategory = async (newCategory) => {
+    try {
+      const response = await fetch(
+        "https://ticketswap-backend.onrender.com/api/categories",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newCategory),
+        }
+      );
+      if (response.ok) {
+        const addedCategory = await response.json();
+        setCategories((prevCategories) => [...prevCategories, addedCategory]);
+      } else {
+        console.error("Failed to add category");
+      }
+    } catch (err) {
+      console.error("Error adding category:", err);
+    }
+  };
+
+  const handleEditCategory = async (updatedCategory) => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/categories/${updatedCategory.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            name: updatedCategory.name,
+            colorHexCode: updatedCategory.colorHexCode,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        setCategories((prevCategories) =>
+          prevCategories.map((category) =>
+            category.id === updatedCategory.id ? updatedCategory : category
+          )
+        );
+      } else {
+        console.error("Failed to update category");
+      }
+    } catch (err) {
+      console.error("Error updating category:", err);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/categories/${categoryId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        setCategories((prevCategories) =>
+          prevCategories.filter((category) => category.id !== categoryId)
+        );
+      }
+    } catch (err) {
+      console.error("Error deleting category:", err);
+    }
+  };
+
+  if (loading || loadingCategories) {
     return (
       <Box textAlign="center" mt={10}>
         <Spinner size="xl" />
-        <Text mt={2}>Loading users...</Text>
+        <Text mt={2}>Loading data...</Text>
       </Box>
     );
   }
@@ -80,72 +164,23 @@ const Admin = () => {
 
   return (
     <Box p={5}>
-      <Table.Root>
-        <Table.Header>
-          <Table.Row>
-            <Table.ColumnHeader>First Name</Table.ColumnHeader>
-            <Table.ColumnHeader>Last Name</Table.ColumnHeader>
-            <Table.ColumnHeader>Email</Table.ColumnHeader>
-            <Table.ColumnHeader>Username</Table.ColumnHeader>
-            <Table.ColumnHeader>Preferred Category</Table.ColumnHeader>
-            <Table.ColumnHeader>Actions</Table.ColumnHeader>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {users.map((user, index) => (
-            <Table.Row key={index}>
-              <Table.Cell>{user.firstName}</Table.Cell>
-              <Table.Cell>{user.lastName}</Table.Cell>
-              <Table.Cell>{user.email}</Table.Cell>
-              <Table.Cell>{user.username}</Table.Cell>
-              <Table.Cell>
-                {user.preferredCategory ? (
-                  <Box>
-                    <Text fontWeight="bold">{user.preferredCategory.name}</Text>
-                    <Text color="gray.500" fontSize="sm">
-                      {user.preferredCategory.parentCategory}
-                    </Text>
-                  </Box>
-                ) : (
-                  <Text color="gray.500">N/A</Text>
-                )}
-              </Table.Cell>
-              <Table.Cell>
-                <Button 
-                  colorScheme="red" 
-                  size="sm" 
-                  onClick={() => handleDeactivate(user.id)}
-                >
-                  Deactivate
-                </Button>
-                <Button 
-                  colorScheme="red" 
-                  size="sm" 
-                  onClick={() => handleGenerateIzv(user.id)}
-                >
-                  Generiraj izvješće
-                </Button>
-                <Button 
-                  colorScheme="red" 
-                  size="sm" 
-                  onClick={() => handleAddAdmin(user.id)}
-                >
-                  Daj administratorske ovlasti
-                </Button>
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-        <Table.Footer>
-          <Table.Row>
-            <Table.Cell colSpan={6}>
-              <Text fontSize="sm" textAlign="center" color="gray.500">
-                {users.length} users found.
-              </Text>
-            </Table.Cell>
-          </Table.Row>
-        </Table.Footer>
-      </Table.Root>
+      <Heading as="h1" size="xl" mb={4}>
+        All Users
+      </Heading>
+      <AdminUsersTable
+        users={users}
+        handleDeactivate={handleDeactivate}
+        handleGenerateIzv={handleGenerateIzv}
+        handleAddAdmin={handleAddAdmin}
+      />
+      <Separator marginTop={"20px"} marginBottom={"20px"} />
+      <AdminCategoriesTable
+        marginTop={"10px"}
+        categories={categories}
+        handleEditCategory={handleEditCategory}
+        handleDeleteCategory={handleDeleteCategory}
+        handleAddCategory={handleAddCategory}
+      />
     </Box>
   );
 };

@@ -33,7 +33,7 @@ const TicketCard = ({ ticket }) => {
         fontSize="sm"
       >
         {ticket.categories[0]?.name}
-      </Badge>{" "}
+      </Badge>
       <Heading size="xl" mb="2">
         {ticket.event.title}
       </Heading>
