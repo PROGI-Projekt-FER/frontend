@@ -26,15 +26,15 @@ const TicketCard = ({ ticket }) => {
       _hover={{ boxShadow: "xl" }}
     >
       <Badge
-        bgColor={ticket.categories[0].colorHexCode}
+        bgColor={ticket.categories[0]?.colorHexCode || "gray.500"}
         color="white"
         px="2"
         py="1"
         borderRadius="md"
         fontSize="sm"
       >
-        {ticket.categories[0]?.name}
-      </Badge>
+        {ticket.categories[0]?.name || "Uncategorized"}
+      </Badge>{" "}
       <Heading size="xl" mb="2">
         {ticket.event.title}
       </Heading>

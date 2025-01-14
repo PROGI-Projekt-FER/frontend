@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, Spinner, Text, Heading, Separator } from "@chakra-ui/react";
+import {
+  Box,
+  Spinner,
+  Text,
+  Heading,
+  Separator,
+  Center,
+  Flex,
+} from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminCategoriesTable from "./AdminCategoriesTable";
@@ -145,10 +153,12 @@ const Admin = () => {
 
   if (loading || loadingCategories) {
     return (
-      <Box textAlign="center" mt={10}>
-        <Spinner size="xl" />
-        <Text mt={2}>Loading data...</Text>
-      </Box>
+      <Center h="88vh">
+        <Flex direction={"column"} align={"center"} gap={"20px"}>
+          <Spinner size="xl" />
+          <Text>Loading...</Text>
+        </Flex>
+      </Center>
     );
   }
 

@@ -8,6 +8,7 @@ import {
   Box,
   Heading,
   Badge,
+  Image,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -19,9 +20,9 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogRoot,
   DialogTitle,
   DialogTrigger,
+  DialogRoot,
 } from "../ui/dialog";
 import {
   SelectContent,
@@ -43,6 +44,7 @@ export default function TicketDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
+  const [weather, setWeather] = useState(null);
 
   const formatEventDate = (dateString) => {
     const date = new Date(dateString);
@@ -67,6 +69,21 @@ export default function TicketDetails() {
 
         const data = await response.json();
         setTicket(data);
+
+        const eventDate = new Date(data.event.eventDate);
+        const currentDate = new Date();
+        const diffDays = (eventDate - currentDate) / (1000 * 60 * 60 * 24);
+
+        if (diffDays <= 5) {
+          const weatherResponse = await fetch(
+            `https://ticketswap-backend.onrender.com/api/tickets/${data.id}/weather`
+          );
+
+          if (weatherResponse.ok) {
+            const weatherData = await weatherResponse.json();
+            setWeather(weatherData);
+          }
+        }
       } catch (err) {
         setError(err.message);
         toaster.create({
@@ -90,9 +107,12 @@ export default function TicketDetails() {
           { credentials: "include" }
         );
         const data = await response.json();
-        console.log(data);
 
-        const myTicketsList = data.map((ticket) => ({
+        const filteredTransactions = data.filter(
+          (ticket) => ticket.status === "SWAP"
+        );
+
+        const myTicketsList = filteredTransactions.map((ticket) => ({
           label:
             ticket.event.title +
             " - " +
@@ -103,7 +123,7 @@ export default function TicketDetails() {
         setMyTickets(createListCollection({ items: myTicketsList }));
       } catch (error) {
         toaster.create({
-          title: "Failed to fetch my tikcets",
+          title: "Failed to fetch my tickets",
           type: "error",
         });
       }
@@ -125,7 +145,6 @@ export default function TicketDetails() {
       );
 
       if (!response.ok) {
-        console.log(response);
         throw new Error("Failed to complete the action. Please try again.");
       }
 
@@ -153,7 +172,6 @@ export default function TicketDetails() {
         receivingTicketId: ticket.id,
       };
 
-      // Make the POST request to the API endpoint
       const response = await fetch(
         `https://ticketswap-backend.onrender.com/api/request`,
         {
@@ -177,7 +195,6 @@ export default function TicketDetails() {
       });
       setOpen(false);
     } catch (err) {
-      // Handle errors
       setOpen(false);
       toaster.create({
         title: "Error",
@@ -191,7 +208,7 @@ export default function TicketDetails() {
     return (
       <>
         <Toaster />
-        <Center h="100vh">
+        <Center h="88vh">
           <Spinner size="xl" />
         </Center>
       </>
@@ -202,12 +219,42 @@ export default function TicketDetails() {
     return <Text>Ticket doesn't exist</Text>;
   }
 
+  const renderWeatherDetails = () => {
+    if (!weather) return null;
+
+    return (
+      <Flex
+        direction="column"
+        alignItems="center"
+        bg="blue.100"
+        p="4"
+        borderRadius="md"
+        boxShadow="md"
+        mt="4"
+      >
+        <Heading size="md">Weather Forecast</Heading>
+        <Flex alignItems="center" mt="2">
+          <Image
+            src={`http://openweathermap.org/img/wn/${weather.weatherIcon}@2x.png`}
+            alt={weather.weatherDescription}
+            boxSize="50px"
+          />
+          <Text fontSize="lg" ml="2">
+            {weather.weather}, {weather.temp.toFixed(1)}°C
+          </Text>
+        </Flex>
+        <Text fontSize="sm" color="gray.600">
+          {weather.weatherDescription}
+        </Text>
+      </Flex>
+    );
+  };
+
   const renderTicketDetails = (status) => {
     const buttonText = status === "SWAP" ? "Swap" : "Buy";
 
     return (
       <>
-        {" "}
         <Toaster />
         <Center h="86vh">
           <Card.Root
@@ -281,6 +328,8 @@ export default function TicketDetails() {
                     </Text>
                   </Flex>
                 </Flex>
+
+                {renderWeatherDetails()}
 
                 {ticket.description && (
                   <Flex flexDirection={"column"}>

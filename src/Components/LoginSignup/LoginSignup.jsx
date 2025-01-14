@@ -8,6 +8,7 @@ import {
   Text,
   Link,
   Spinner,
+  Center,
 } from "@chakra-ui/react";
 
 import google_icon from "../Assets/google.png";
@@ -68,9 +69,14 @@ const LoginSignup = () => {
 
   if (loading) {
     return (
-      <Flex alignItems="center" justifyContent="center" height="100vh" p="4">
-        <Spinner size="xl" />
-      </Flex>
+      <Box p={4}>
+        <Center h="88vh">
+          <Flex direction={"column"} align={"center"} gap={"20px"}>
+            <Spinner size="xl" />
+            <Text>Loading...</Text>
+          </Flex>
+        </Center>
+      </Box>
     );
   }
 

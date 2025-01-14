@@ -7,6 +7,8 @@ import {
   Button,
   Center,
   Badge,
+  Flex,
+  Spinner,
 } from "@chakra-ui/react";
 import { Avatar } from "../ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +17,7 @@ import { Field } from "../ui/field";
 const Profile = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +34,8 @@ const Profile = () => {
       } catch (error) {
         console.error("Failed to fetch user info:", error);
         setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
     apiCall();
@@ -39,6 +44,19 @@ const Profile = () => {
   const handleEditClick = () => {
     navigate("/profile/edit");
   };
+
+  if (loading) {
+    return (
+      <Box p={4}>
+        <Center h="88vh">
+          <Flex direction={"column"} align={"center"} gap={"20px"}>
+            <Spinner size="xl" />
+            <Text>Loading...</Text>
+          </Flex>
+        </Center>
+      </Box>
+    );
+  }
 
   return (
     <Center h="88vh">

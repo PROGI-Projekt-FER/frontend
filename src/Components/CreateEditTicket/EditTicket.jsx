@@ -19,26 +19,12 @@ import {
   SelectValueText,
 } from "../ui/select";
 import { createListCollection } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const CreateTicket = () => {
+const EditTicket = () => {
+  const params = useParams();
+  const id = params.slug;
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setLoading(true);
-    const user = localStorage.getItem("loggedInUser");
-    if (user) {
-      setLoading(false);
-      setIsLoggedIn(true);
-    } else {
-      toaster.create({
-        title: "You must be logged in to create tickets",
-        type: "error",
-        duration: 6000,
-      });
-      navigate("/", { replace: true });
-    }
-  }, [navigate]);
 
   const [eventName, setEventName] = useState("");
   const [artist, setArtist] = useState("");
@@ -55,7 +41,6 @@ const CreateTicket = () => {
   );
 
   const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const swapOrSell = createListCollection({
     items: [
@@ -65,6 +50,38 @@ const CreateTicket = () => {
   });
 
   useEffect(() => {
+    const fetchTicket = async () => {
+      try {
+        const response = await fetch(
+          `https://ticketswap-backend.onrender.com/api/tickets/${id}`
+        );
+        if (response.ok) {
+          const ticket = await response.json();
+          setEventName(ticket.event.title);
+          setArtist(ticket.event.eventEntity?.name || "");
+          setCategoryId(ticket.categories[0]?.id || "");
+          setDescription(ticket.event.description);
+          setTimestamp(ticket.event.eventDate);
+          setAddress(ticket.event.venue.location.address);
+          setCity(ticket.event.venue.location.city);
+          setOfferType(ticket.status === "SWAP" ? "1" : "2");
+          setPrice(ticket.price?.toString() || "");
+          setSwapCategoryId(
+            ticket.interestedInCategoryIds[0]?.toString() || ""
+          );
+        } else {
+          toaster.create({
+            title: "Failed to fetch ticket details",
+            type: "error",
+          });
+        }
+      } catch (error) {
+        toaster.create({ title: "An error occurred", type: "error" });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const fetchCategories = async () => {
       try {
         const response = await fetch(
@@ -83,46 +100,15 @@ const CreateTicket = () => {
         });
       }
     };
+
+    fetchTicket();
     fetchCategories();
-  }, []);
+  }, [id]);
 
   const handleSubmit = async () => {
     if (!eventName) {
       return toaster.create({
         title: "Event Name is required.",
-        type: "error",
-      });
-    }
-    if (categoryId === "1" && !artist) {
-      return toaster.create({
-        title: "Artist Name is required for Music Events.",
-        type: "error",
-      });
-    }
-    if (!categoryId) {
-      return toaster.create({ title: "Category is required.", type: "error" });
-    }
-    if (!timestamp) {
-      return toaster.create({
-        title: "Event Time is required.",
-        type: "error",
-      });
-    }
-    if (!address) {
-      return toaster.create({ title: "Address is required.", type: "error" });
-    }
-    if (!city) {
-      return toaster.create({ title: "City is required.", type: "error" });
-    }
-    if (offerType === "1" && !swapCategoryId) {
-      return toaster.create({
-        title: "Swap Category is required.",
-        type: "error",
-      });
-    }
-    if (offerType === "2" && (!price || isNaN(parseFloat(price)))) {
-      return toaster.create({
-        title: "Valid Price is required.",
         type: "error",
       });
     }
@@ -156,10 +142,10 @@ const CreateTicket = () => {
 
     try {
       const response = await fetch(
-        "https://ticketswap-backend.onrender.com/api/tickets",
+        `https://ticketswap-backend.onrender.com/api/tickets/${id}`,
         {
           credentials: "include",
-          method: "POST",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
@@ -167,27 +153,23 @@ const CreateTicket = () => {
 
       if (response.ok) {
         toaster.create({
-          title: "Ticket created successfully",
+          title: "Ticket updated successfully",
           type: "success",
         });
-        window.location.href = "/browse-tickets";
+        navigate("/browse-tickets");
       } else {
-        toaster.create({ title: "Error while creating ticket", type: "error" });
+        toaster.create({ title: "Error updating ticket", type: "error" });
       }
     } catch (error) {
-      alert("An error occurred while creating the ticket.");
+      toaster.create({ title: "An error occurred", type: "error" });
     }
   };
 
   if (loading) {
     return (
-      <>
-        <Toaster />
-
-        <Center h="88vh">
-          <Spinner size="xl" />
-        </Center>
-      </>
+      <Center h="88vh">
+        <Spinner size="xl" />
+      </Center>
     );
   }
 
@@ -197,7 +179,7 @@ const CreateTicket = () => {
       <Center minH="92vh" mt="5" mb="5">
         <Card.Root width="xl" p="4" borderRadius="md">
           <Card.Header>
-            <Card.Title>Create Ticket</Card.Title>
+            <Card.Title>Edit Ticket</Card.Title>
           </Card.Header>
           <Card.Body>
             <Stack gap="4" w="full">
@@ -330,7 +312,7 @@ const CreateTicket = () => {
           </Card.Body>
           <Card.Footer justifyContent="flex-end">
             <Button variant="solid" colorScheme="blue" onClick={handleSubmit}>
-              Submit
+              Update
             </Button>
           </Card.Footer>
         </Card.Root>
@@ -339,4 +321,4 @@ const CreateTicket = () => {
   );
 };
 
-export default CreateTicket;
+export default EditTicket;
