@@ -41,6 +41,34 @@ const MySwapRequests = () => {
     fetchTickets();
   }, []);
 
+  const handleResponse = async (requestId, accepting) => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/request/${requestId}/respond`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ accepting }),
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to respond to request: ${response.statusText}`);
+      }
+
+      // Update tickets state after successful response
+      setTickets((prevTickets) =>
+        prevTickets.filter((ticket) => ticket.sendingTicket.id !== requestId)
+      );
+    } catch (err) {
+      console.error(err.message);
+      setError(err.message);
+    }
+  };
+
   if (isLoading) {
     return <Spinner size="lg" color="blue.500" />;
   }
@@ -90,10 +118,20 @@ const MySwapRequests = () => {
                 </Table.Cell>
                 <Table.Cell width="20%">
                   <Flex justifyContent="flex-start" gap={2}>
-                    <IconButton aria-label="Edit Ticket" size="md" bg="green">
+                    <IconButton
+                      aria-label="Accept Request"
+                      size="md"
+                      bg="green"
+                      onClick={() => handleResponse(request.requestId, true)}
+                    >
                       <MdCheck />
                     </IconButton>
-                    <IconButton aria-label="Delete Ticket" size="md" bg="red">
+                    <IconButton
+                      aria-label="Reject Request"
+                      size="md"
+                      bg="red"
+                      onClick={() => handleResponse(request.requestId, false)}
+                    >
                       <MdClose />
                     </IconButton>
                   </Flex>
