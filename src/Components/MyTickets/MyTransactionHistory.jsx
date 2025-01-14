@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Table, IconButton, Text, Flex, Spinner } from "@chakra-ui/react";
 import { MdInfo } from "react-icons/md";
+import SmallTicketCard from "../Shared/SmallTicketCard";
 
 const MyTransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
@@ -45,56 +46,46 @@ const MyTransactionHistory = () => {
         My Transaction History
       </Text>
       <Box>
-        <Table variant="simple" size="md" borderWidth="1px" borderRadius="md">
-          <thead>
-            <tr>
-              <th>Ticket</th>
-              <th>Traded For</th>
-              <th>Sold For</th>
-              <th>Traded At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction, index) => (
-              <tr key={index}>
-                <td>
-                  <Text>
-                    {transaction.ticket.event.title} -{" "}
-                    {transaction.ticket.description}
-                  </Text>
-                </td>
-                <td>
+        <Table.Root
+          tableLayout="fixed"
+          width="100%"
+          borderWidth="1px"
+          borderRadius="md"
+          overflow="hidden"
+        >
+          <Table.Header bg="gray.100">
+            <Table.Row>
+              <Table.ColumnHeader width="30%">Ticket</Table.ColumnHeader>
+              <Table.ColumnHeader width="30%">Traded For</Table.ColumnHeader>
+              <Table.ColumnHeader width="20%">Sold For</Table.ColumnHeader>
+              <Table.ColumnHeader width="20%">Traded At</Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {transactions.map((transaction) => (
+              <Table.Row key={transaction.ticket.id}>
+                <Table.Cell width="30%">
+                  <SmallTicketCard ticket={transaction.ticket} />
+                </Table.Cell>
+                <Table.Cell width="30%">
                   {transaction.swappedForTicket ? (
-                    <Text>
-                      {transaction.swappedForTicket.event.title} -{" "}
-                      {transaction.swappedForTicket.description}
-                    </Text>
+                    <SmallTicketCard ticket={transaction.swappedForTicket} />
                   ) : (
-                    <Text>Not applicable</Text>
+                    <Text>-</Text>
                   )}
-                </td>
-                <td>
+                </Table.Cell>
+                <Table.Cell width="20%">
                   {transaction.soldForPrice > 0
                     ? `€${transaction.soldForPrice}`
-                    : "Not applicable"}
-                </td>
-                <td>{new Date(transaction.tradedAt).toLocaleString()}</td>
-                <td>
-                  <Flex justifyContent="flex-start" gap={2}>
-                    <IconButton
-                      aria-label="View Details"
-                      icon={<MdInfo />}
-                      size="sm"
-                      bg="blue.400"
-                      color="white"
-                    />
-                  </Flex>
-                </td>
-              </tr>
+                    : "-"}
+                </Table.Cell>
+                <Table.Cell width="20%">
+                  {new Date(transaction.tradedAt).toLocaleString()}
+                </Table.Cell>
+              </Table.Row>
             ))}
-          </tbody>
-        </Table>
+          </Table.Body>
+        </Table.Root>
       </Box>
     </>
   );

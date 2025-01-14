@@ -74,19 +74,21 @@ const MyTicketsTable = () => {
                 </Table.Cell>
                 <Table.Cell width="30%"></Table.Cell>
                 <Table.Cell width="20%">
-                  <Flex justifyContent="flex-start" gap={2}>
-                    <IconButton
-                      aria-label="Edit Ticket"
-                      size="md"
-                      bg="goldenrod"
-                      onClick={() => navigate(`/edit-ticket/${ticket.id}`)}
-                    >
-                      <MdEdit />
-                    </IconButton>
-                    <IconButton aria-label="Delete Ticket" size="md" bg="red">
-                      <MdDelete />
-                    </IconButton>
-                  </Flex>
+                  {ticket.status !== "EXCHANGED" && (
+                    <Flex justifyContent="flex-start" gap={2}>
+                      <IconButton
+                        aria-label="Edit Ticket"
+                        size="md"
+                        bg="goldenrod"
+                        onClick={() => navigate(`/edit-ticket/${ticket.id}`)}
+                      >
+                        <MdEdit />
+                      </IconButton>
+                      <IconButton aria-label="Delete Ticket" size="md" bg="red">
+                        <MdDelete />
+                      </IconButton>
+                    </Flex>
+                  )}
                 </Table.Cell>
               </Table.Row>
             ))}

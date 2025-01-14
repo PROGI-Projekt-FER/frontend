@@ -89,6 +89,16 @@ const Navbar = () => {
           </Link>
         )}
 
+        {user && (
+          <Link
+            onClick={() => navigate("/admin")}
+            fontWeight="bold"
+            color="white"
+          >
+            Admin{" "}
+          </Link>
+        )}
+
         {user ? (
           <Button
             variant="outline"

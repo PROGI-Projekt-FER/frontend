@@ -39,14 +39,14 @@ const SmallTicketCard = ({ ticket }) => {
         {/* Categories and Price */}
         <Flex justifyContent="space-between" mb="4">
           <Badge
-            bgColor={ticket.categories[0]?.colorHexCode || "gray.500"}
+            bgColor={ticket.categories?.[0]?.colorHexCode || "gray.500"}
             color="white"
             px="2"
             py="1"
             borderRadius="md"
             fontSize="sm"
           >
-            {ticket.categories[0]?.name || "Uncategorized"}
+            {ticket.categories?.[0]?.name || ""}
           </Badge>
           <Badge
             bgColor="white"
