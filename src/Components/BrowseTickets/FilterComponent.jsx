@@ -25,6 +25,8 @@ const FilterComponent = ({ categories, onFilterChange }) => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [offerTypes, setOfferTypes] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
 
   const handleApplyFilters = () => {
     onFilterChange({
@@ -32,6 +34,8 @@ const FilterComponent = ({ categories, onFilterChange }) => {
       offerTypes,
       startDate,
       endDate,
+      priceMin,
+      priceMax,
     });
   };
 
@@ -40,6 +44,8 @@ const FilterComponent = ({ categories, onFilterChange }) => {
     setStartDate("");
     setEndDate("");
     setOfferTypes("");
+    setPriceMin("");
+    setPriceMax("");
     onFilterChange({});
   };
 
@@ -149,22 +155,47 @@ const FilterComponent = ({ categories, onFilterChange }) => {
               />
             )}
           </Flex>
+
+          {/* Price Range Filters */}
+          <Flex align="center" gap="4">
+            <Field label="Min Price">
+              <Input
+                type="number"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                placeholder="Enter minimum price"
+              />
+            </Field>
+            <Field label="Max Price">
+              <Input
+                type="number"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                placeholder="Enter maximum price"
+              />
+            </Field>
+          </Flex>
         </Stack>
       </Card.Body>
       <Card.Footer>
         <Stack direction="row" spacing="4" w="full">
+          <Button colorScheme="gray" onClick={handleReset} flex="1">
+            Reset Filters
+          </Button>
           <Button
             colorScheme="blue"
             onClick={handleApplyFilters}
             isDisabled={
-              !categoriesFilter && !startDate && !endDate && !offerTypes
+              !categoriesFilter &&
+              !startDate &&
+              !endDate &&
+              !offerTypes &&
+              !priceMin &&
+              !priceMax
             }
             flex="1"
           >
             Apply Filters
-          </Button>
-          <Button colorScheme="gray" onClick={handleReset} flex="1">
-            Reset Filters
           </Button>
         </Stack>
       </Card.Footer>
