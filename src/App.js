@@ -9,6 +9,7 @@ import { Provider } from "./Components/ui/provider";
 import NavBar from "./Components/NavBar/NabBar";
 import Profile from "./Components/Profile/Profile";
 import ProfileEdit from "./Components/ProfileEdit/ProfileEdit";
+import Admin from "./Components/Admin/Admin";
 import Test from "./Components/test/Test";
 import TicketDetails from "./Components/TicketDetails/TicketDetails";
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/login" element={<LoginSignup />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/test" element={<Test />} />
           <Route path="/tickets/:slug" element={<TicketDetails />} />
         </Routes>
