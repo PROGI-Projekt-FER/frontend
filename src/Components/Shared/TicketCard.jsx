@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Badge, Heading, Text, Flex, Button } from "@chakra-ui/react";
+import { Link } from "react-router-dom";
 import { MdCalendarToday, MdLocationOn } from "react-icons/md";
 
 const formatEventDate = (dateString) => {
@@ -75,9 +76,11 @@ const TicketCard = ({ ticket }) => {
           {ticket.price ? `${ticket.price}€` : "TicketSwap"}
         </Badge>
       </Flex>
-      <Button colorScheme="blue" width="full">
-        View Details
-      </Button>
+      <Link to={`/tickets/${ticket.id}`}>
+        <Button colorScheme="blue" width="full">
+          View Details
+        </Button>
+      </Link>
     </Box>
   );
 };
