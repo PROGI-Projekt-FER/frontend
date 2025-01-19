@@ -84,9 +84,31 @@ const Admin = () => {
     navigate(`/report/${userId}`);
   };
 
-  const handleAddAdmin = (userId) => {
-    console.log("Make user admin", userId);
-  };
+  const handleAddAdmin = async (userId) => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/config/make-user-admin/${userId}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+  
+      if (response.ok) {
+        console.log(`User ${userId} was successfully made an admin.`);
+        // Optionally update the UI if needed, e.g., mark the user as admin
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === userId ? { ...user, isAdmin: true } : user
+          )
+        );
+      } else {
+        console.error(`Failed to make user ${userId} an admin.`);
+      }
+    } catch (err) {
+      console.error("Error making user an admin:", err);
+    }
+  };  
 
   const handleAddCategory = async (newCategory) => {
     try {
