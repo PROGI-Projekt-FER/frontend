@@ -14,6 +14,7 @@ import Admin from "./Components/Admin/Admin";
 import Test from "./Components/test/Test";
 import TicketDetails from "./Components/TicketDetails/TicketDetails";
 import MyTickets from "./Components/MyTickets/MyTickets";
+import AdminTransactionHistory from "./Components/Admin/AdminTransactionHistory";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/test" element={<Test />} />
           <Route path="/tickets/:slug" element={<TicketDetails />} />
           <Route path="/my-tickets" element={<MyTickets />} />
+          <Route path="/report/:userId" element={<AdminTransactionHistory />} />
         </Routes>
       </Router>
     </Provider>
