@@ -87,6 +87,14 @@ const CreateTicket = () => {
   }, []);
 
   const handleSubmit = async () => {
+    const eventDate = new Date(timestamp);
+    if (eventDate < Date.now()) {
+      return toaster.create({
+        title: "Event time can not be in the past.",
+        type: "error",
+      });
+    }
+
     if (!eventName) {
       return toaster.create({
         title: "Event Name is required.",
