@@ -50,7 +50,7 @@ const LoginSignup = () => {
         "https://ticketswap-backend.onrender.com/api/logout",
         {
           method: "POST",
-          credentials: "include", // Ensures cookies or session tokens are sent
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
