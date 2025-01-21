@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Flex, Box, Heading, Button, Link } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const user = localStorage.getItem("loggedInUser");
+
+  const [user, setUser] = useState(() => {
+    return JSON.parse(localStorage.getItem("loggedInUser")) || null;
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUser(JSON.parse(localStorage.getItem("loggedInUser")));
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   async function handleLogout() {
     try {
@@ -21,6 +36,7 @@ const Navbar = () => {
 
       if (response.ok) {
         localStorage.removeItem("loggedInUser");
+        setUser(null);
 
         window.location.href = "/";
       } else {
