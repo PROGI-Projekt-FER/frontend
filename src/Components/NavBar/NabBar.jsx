@@ -10,14 +10,18 @@ const Navbar = () => {
   });
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      setUser(JSON.parse(localStorage.getItem("loggedInUser")));
+    const updateUser = () => {
+      setUser(JSON.parse(localStorage.getItem("loggedInUser")) || null);
     };
 
-    window.addEventListener("storage", handleStorageChange);
+    const storageListener = () => {
+      updateUser();
+    };
+
+    window.addEventListener("storage", storageListener);
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("storage", storageListener);
     };
   }, []);
 
@@ -63,7 +67,7 @@ const Navbar = () => {
       boxShadow="md"
     >
       <Heading size="md" cursor="pointer" onClick={() => navigate("/")}>
-        TicketSwapper
+        TicketSwapper1
       </Heading>
 
       <Flex alignItems="center" gap="4">

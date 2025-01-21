@@ -29,6 +29,8 @@ const LoginSignup = () => {
           const userData = await response.json();
           setUser(userData);
           localStorage.setItem("loggedInUser", JSON.stringify(userData));
+
+          window.dispatchEvent(new Event("storage"));
         } else {
           setUser(null);
         }
@@ -58,6 +60,8 @@ const LoginSignup = () => {
       if (response.ok) {
         localStorage.removeItem("loggedInUser");
         setUser(null);
+        window.dispatchEvent(new Event("storage"));
+
         window.location.href = "/";
       } else {
         console.error("Failed to log out:", response.statusText);
