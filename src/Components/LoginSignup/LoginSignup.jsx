@@ -29,8 +29,6 @@ const LoginSignup = () => {
           const userData = await response.json();
           setUser(userData);
           localStorage.setItem("loggedInUser", JSON.stringify(userData));
-
-          window.dispatchEvent(new Event("storage"));
         } else {
           setUser(null);
         }
@@ -50,7 +48,7 @@ const LoginSignup = () => {
         "https://ticketswap-backend.onrender.com/api/logout",
         {
           method: "POST",
-          credentials: "include",
+          credentials: "include", // Ensures cookies or session tokens are sent
           headers: {
             "Content-Type": "application/json",
           },
@@ -60,8 +58,6 @@ const LoginSignup = () => {
       if (response.ok) {
         localStorage.removeItem("loggedInUser");
         setUser(null);
-        window.dispatchEvent(new Event("storage"));
-
         window.location.href = "/";
       } else {
         console.error("Failed to log out:", response.statusText);

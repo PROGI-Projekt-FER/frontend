@@ -7,7 +7,15 @@ import {
   Separator,
   Center,
   Flex,
+  Button,
+  Stack,
+  HStack
 } from "@chakra-ui/react";
+import {
+  NumberInputField,
+  NumberInputLabel,
+  NumberInputRoot,
+} from "../ui/number-input"
 import { useNavigate } from "react-router-dom";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminCategoriesTable from "./AdminCategoriesTable";
@@ -18,6 +26,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState(null);
+  const [daysToDelete, setDaysToDelete] = useState(30); // Default value for days
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,12 +81,34 @@ const Admin = () => {
   };
 
   const handleGenerateIzv = (userId) => {
-    console.log("Generate report for user", userId);
+    navigate(`/report/${userId}`);
   };
 
-  const handleAddAdmin = (userId) => {
-    console.log("Make user admin", userId);
-  };
+  const handleAddAdmin = async (userId) => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/config/make-user-admin/${userId}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+  
+      if (response.ok) {
+        console.log(`User ${userId} was successfully made an admin.`);
+        // Optionally update the UI if needed, e.g., mark the user as admin
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === userId ? { ...user, isAdmin: true } : user
+          )
+        );
+      } else {
+        console.error(`Failed to make user ${userId} an admin.`);
+      }
+    } catch (err) {
+      console.error("Error making user an admin:", err);
+    }
+  };  
 
   const handleAddCategory = async (newCategory) => {
     try {
@@ -191,6 +222,20 @@ const Admin = () => {
         handleDeleteCategory={handleDeleteCategory}
         handleAddCategory={handleAddCategory}
       />
+      <Separator marginTop={"20px"} marginBottom={"20px"} />
+      <Heading as="h1" size="xl" mb={4}>
+        Number of days it will take for a ticket to go from deactivated to deleted:
+      </Heading>
+      <Stack>
+        <HStack>
+          <NumberInputRoot size="lg" defaultValue="30">
+            <NumberInputField />
+          </NumberInputRoot>
+          <Button colorScheme="teal" size="lg">
+            Save
+          </Button>
+        </HStack>
+      </Stack>
     </Box>
   );
 };
