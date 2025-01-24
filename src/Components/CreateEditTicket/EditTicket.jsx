@@ -24,8 +24,23 @@ import { useNavigate, useParams } from "react-router-dom";
 const EditTicket = () => {
   const params = useParams();
   const id = params.slug;
+
   const navigate = useNavigate();
 
+  useEffect(() => {
+    setLoading(true);
+    const user = localStorage.getItem("loggedInUser");
+    if (user) {
+      setLoading(false);
+    } else {
+      toaster.create({
+        title: "You must be logged in to create tickets",
+        type: "error",
+        duration: 6000,
+      });
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
   const [ticketId, setTicketId] = useState("");
   const [eventId, setEventId] = useState("");
   const [venueId, setVenueId] = useState("");

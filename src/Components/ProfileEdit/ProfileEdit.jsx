@@ -26,12 +26,30 @@ import { Avatar } from "../ui/avatar";
 import { useNavigate } from "react-router-dom";
 
 const ProfileEdit = () => {
-  const [userInfo, setUserInfo] = useState(null); // State to store user info
+  const [userInfo, setUserInfo] = useState(null);
   const [categories, setCategories] = useState(
     createListCollection({ items: [] })
-  ); // State for categories
-  const [error, setError] = useState(null); // State for errors
-  const navigate = useNavigate(); // Initialize useNavigate
+  );
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setLoading(true);
+    const user = localStorage.getItem("loggedInUser");
+    if (user) {
+      setLoading(false);
+    } else {
+      toaster.create({
+        title: "You must be logged in to create tickets",
+        type: "error",
+        duration: 6000,
+      });
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -41,7 +59,7 @@ const ProfileEdit = () => {
           { credentials: "include" }
         );
         const responseText = await response.text();
-        const data = JSON.parse(responseText); // Parse the response to JSON
+        const data = JSON.parse(responseText);
         setUserInfo(data);
       } catch (error) {
         console.error("Failed to fetch user info:", error);
@@ -81,7 +99,6 @@ const ProfileEdit = () => {
   };
 
   const handleSave = async () => {
-    console.log("Saving userInfo:", userInfo); // Print before saving
     try {
       const response = await fetch(
         "https://ticketswap-backend.onrender.com/api/users/info",
@@ -113,7 +130,7 @@ const ProfileEdit = () => {
     }
   };
 
-  if (!userInfo) {
+  if (!userInfo || loading) {
     return (
       <>
         <Toaster />
