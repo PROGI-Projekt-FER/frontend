@@ -71,12 +71,12 @@ const AdminUsersTable = ({
               <Table.Cell>
                 <Flex gap={"2px"} alignItems="center">
                   <RadioGroup
-                    onChange={(value) => handleChangeRole(user.id, value)}
-                    value={user.role}
+                    onChange={(value) => handleChangeRole(user)}
+                    value={user.userRole === "ADMIN" ? "ADMIN" : "REGULAR"}
                   >
                     <Stack direction="row">
-                      <Radio value="regular">Regular User</Radio>
-                      <Radio value="admin">Admin</Radio>
+                      <Radio value="REGULAR">Regular User</Radio>
+                      <Radio value="ADMIN">Admin</Radio>
                     </Stack>
                   </RadioGroup>
                 </Flex>
