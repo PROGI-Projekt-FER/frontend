@@ -11,6 +11,7 @@ import {
   Center,
   VStack,
 } from "@chakra-ui/react";
+import { Toaster, toaster } from "../ui/toaster";
 
 import google_icon from "../Assets/google.png";
 
@@ -47,14 +48,23 @@ const LoginSignup = () => {
 
   async function handleRoleChange(endpoint) {
     try {
-      const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/config/${endpoint}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const updatedUser = await response.json();
         setUser(updatedUser);
+        toaster.create({
+          title:
+            "Changed user role successfully! User now has a role: " +
+            updatedUser.userRole,
+          type: "success",
+        });
       } else {
         console.error("Failed to update role:", response.statusText);
       }
@@ -100,67 +110,71 @@ const LoginSignup = () => {
   }
 
   return (
-    <Flex alignItems="center" justifyContent="center" height="100vh" p="4">
-      <Box
-        width={["90%", "400px"]}
-        p="6"
-        borderRadius="lg"
-        boxShadow="lg"
-        bg="white"
-      >
-        {user ? (
-          <VStack spacing={4}>
-            <Heading size="md">
-              Logged in as {user.username || "Unknown User"}
-            </Heading>
-            <Text>Email: {user.email || "Unknown Email"}</Text>
-            <Button colorScheme="red" width="full" onClick={logout}>
-              Logout
-            </Button>
-            <Button
-              colorScheme="green"
-              width="full"
-              onClick={() => handleRoleChange("make-me-admin")}
-            >
-              Make Me Admin
-            </Button>
-            <Button
-              colorScheme="blue"
-              width="full"
-              onClick={() => handleRoleChange("make-me-regular-user")}
-            >
-              Make Me Regular User
-            </Button>
-          </VStack>
-        ) : (
-          <VStack spacing={4}>
-            <Heading size="lg">Login</Heading>
-            <Link
-              href="https://ticketswap-backend.onrender.com/oauth2/authorization/google"
-              _hover={{ textDecoration: "none" }}
-              width="full"
-            >
+    <>
+      <Toaster />
+      <Flex alignItems="center" justifyContent="center" height="100vh" p="4">
+        <Box
+          width={["90%", "400px"]}
+          p="6"
+          borderRadius="lg"
+          boxShadow="lg"
+          bg="white"
+        >
+          {user ? (
+            <VStack spacing={4}>
+              <Heading size="md">
+                Logged in as {user.username || "Unknown User"}
+              </Heading>
+              <Text>Email: {user.email || "Unknown Email"}</Text>
+              <Button colorScheme="red" width="full" onClick={logout}>
+                Logout
+              </Button>
+              <Text>Note: Buttons below are for Dev purposes only</Text>
+              <Button
+                colorScheme="green"
+                width="full"
+                onClick={() => handleRoleChange("make-me-admin")}
+              >
+                Make Me Admin
+              </Button>
               <Button
                 colorScheme="blue"
-                variant="solid"
                 width="full"
-                py="6"
-                borderRadius="md"
+                onClick={() => handleRoleChange("make-me-regular-user")}
               >
-                <Image
-                  src={google_icon}
-                  alt="Google Icon"
-                  boxSize="24px"
-                  mr="2"
-                  display="inline-block"
-                />
-                Continue with Google
+                Make Me Regular User
               </Button>
-            </Link>
-          </VStack>
-        )}
-      </Box>
-    </Flex>
+            </VStack>
+          ) : (
+            <VStack spacing={4}>
+              <Heading size="lg">Login</Heading>
+              <Link
+                href="https://ticketswap-backend.onrender.com/oauth2/authorization/google"
+                _hover={{ textDecoration: "none" }}
+                width="full"
+              >
+                <Button
+                  colorScheme="blue"
+                  variant="solid"
+                  width="full"
+                  py="6"
+                  borderRadius="md"
+                >
+                  <Image
+                    src={google_icon}
+                    alt="Google Icon"
+                    boxSize="24px"
+                    mr="2"
+                    display="inline-block"
+                  />
+                  Continue with Google
+                </Button>
+              </Link>
+            </VStack>
+          )}
+        </Box>
+      </Flex>
+    </>
   );
 };
 
