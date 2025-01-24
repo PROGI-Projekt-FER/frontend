@@ -143,10 +143,33 @@ const CreateTicket = () => {
     debouncedFetchArtists(searchTerm);
   }, [searchTerm, debouncedFetchArtists]);
 
+  const [artistImage, setArtistImage] = useState(null);
+
+  const getArtistImage = async (artistId) => {
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/tickets/artist/${artistId}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch artist image");
+
+      const data = await response.json();
+      setArtistImage(data.imageUrl || null);
+    } catch (error) {
+      console.error("Error fetching artist image:", error);
+      setArtistImage(null);
+    }
+  };
+
   const handleSelectArtist = (selection) => {
     console.log(selection);
+
+    let newArtistId = selection[Object.keys(selection)[0]];
+
     setArtist(Object.keys(selection)[0]);
-    setArtistId(selection[Object.keys(selection)[0]]);
+    setArtistId(newArtistId);
+
+    getArtistImage(newArtistId);
+
     setArtistSelectionOpen(false);
   };
 
@@ -262,7 +285,18 @@ const CreateTicket = () => {
       <Center minH="92vh" mt="5" mb="5">
         <Card.Root width="xl" p="4" borderRadius="md">
           <Card.Header>
-            <Card.Title>Create Ticket</Card.Title>
+            <Flex justifyContent={"space-between"} height={"70px"}>
+              <Card.Title>Create Ticket</Card.Title>
+              {artistImage && (
+                <img
+                  height={"70px"}
+                  width={"70px"}
+                  src={artistImage}
+                  alt="Artist"
+                  style={{ borderRadius: "12px", border: "2px solid black" }}
+                />
+              )}
+            </Flex>
           </Card.Header>
           <Card.Body>
             <Stack gap="4" w="full">
