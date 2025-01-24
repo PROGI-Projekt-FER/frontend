@@ -121,24 +121,32 @@ const MySwapRequests = () => {
                   <SmallTicketCard ticket={request.sendingTicket} />
                 </Table.Cell>
                 <Table.Cell width="20%">
-                  <Flex justifyContent="flex-start" gap={2}>
-                    <IconButton
-                      aria-label="Accept Request"
-                      size="md"
-                      bg="green"
-                      onClick={() => handleResponse(request.requestId, true)}
-                    >
-                      <MdCheck />
-                    </IconButton>
-                    <IconButton
-                      aria-label="Reject Request"
-                      size="md"
-                      bg="red"
-                      onClick={() => handleResponse(request.requestId, false)}
-                    >
-                      <MdClose />
-                    </IconButton>
-                  </Flex>
+                  {request.confirmationStatus === "APPROVED" &&
+                  request.swapCycleStatus === "PENDING" ? (
+                    <Text>
+                      You approved this swap, we are still waiting for other
+                      users in this swap cycle.
+                    </Text>
+                  ) : (
+                    <Flex justifyContent="flex-start" gap={2}>
+                      <IconButton
+                        aria-label="Accept Request"
+                        size="md"
+                        bg="green"
+                        onClick={() => handleResponse(request.requestId, true)}
+                      >
+                        <MdCheck />
+                      </IconButton>
+                      <IconButton
+                        aria-label="Reject Request"
+                        size="md"
+                        bg="red"
+                        onClick={() => handleResponse(request.requestId, false)}
+                      >
+                        <MdClose />
+                      </IconButton>
+                    </Flex>
+                  )}
                 </Table.Cell>
               </Table.Row>
             ))}

@@ -61,7 +61,7 @@ const Navbar = () => {
       boxShadow="md"
     >
       <Heading size="md" cursor="pointer" onClick={() => navigate("/")}>
-        TicketSwapper1
+        TicketSwapper
       </Heading>
 
       <Flex alignItems="center" gap="4">
