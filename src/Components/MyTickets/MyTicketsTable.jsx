@@ -61,7 +61,7 @@ const MyTicketsTable = () => {
       const response = await fetch(
         `https://ticketswap-backend.onrender.com/api/tickets/${ticket.id}/change-status`,
         {
-          method: "PATCH",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
