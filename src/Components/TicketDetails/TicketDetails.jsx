@@ -10,6 +10,8 @@ import {
   Badge,
   Image,
 } from "@chakra-ui/react";
+import { Checkbox } from "../ui/checkbox";
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Toaster, toaster } from "../ui/toaster";
@@ -49,6 +51,8 @@ export default function TicketDetails() {
 
   const [myTicketsRaw, setMyTicketsRaw] = useState(null);
   const [isMyTicket, setIsMyTicket] = useState(false);
+
+  const [shouldAttemptSwap, setShouldAttemptSwap] = useState(true);
 
   const formatEventDate = (dateString) => {
     const date = new Date(dateString);
@@ -221,6 +225,7 @@ export default function TicketDetails() {
       const requestBody = {
         requestingTicketId: requestingTicketID,
         receivingTicketId: ticket.id,
+        shouldAttemptSwap: shouldAttemptSwap,
       };
 
       const response = await fetch(
@@ -543,16 +548,26 @@ export default function TicketDetails() {
                                   ) : (
                                     <SelectItem
                                       item={{
-                                        label: "No categories available",
+                                        label:
+                                          "No tickets for swapping available",
                                         value: "",
                                       }}
                                       disabled
                                     >
-                                      No categories available
+                                      No tickets for swapping available{" "}
                                     </SelectItem>
                                   )}
                                 </SelectContent>
                               </SelectRoot>
+                              <Checkbox
+                                mt={4}
+                                checked={shouldAttemptSwap}
+                                onCheckedChange={(e) =>
+                                  setShouldAttemptSwap(!!e.checked)
+                                }
+                              >
+                                Enable Cycle
+                              </Checkbox>
                             </Box>
                           ) : (
                             <Text>

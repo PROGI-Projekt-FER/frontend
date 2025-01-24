@@ -33,6 +33,7 @@ const LoginSignup = () => {
           const userData = await response.json();
           setUser(userData);
           localStorage.setItem("loggedInUser", JSON.stringify(userData));
+          window.dispatchEvent(new Event("userStateChange"));
         } else {
           setUser(null);
         }
@@ -60,6 +61,7 @@ const LoginSignup = () => {
         const updatedUser = await response.json();
         setUser(updatedUser);
         localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("userStateChange"));
 
         toaster.create({
           title:
