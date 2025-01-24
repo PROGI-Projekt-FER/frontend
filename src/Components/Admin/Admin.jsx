@@ -9,16 +9,17 @@ import {
   Flex,
   Button,
   Stack,
-  HStack
+  HStack,
 } from "@chakra-ui/react";
 import {
   NumberInputField,
   NumberInputLabel,
   NumberInputRoot,
-} from "../ui/number-input"
+} from "../ui/number-input";
 import { useNavigate } from "react-router-dom";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminCategoriesTable from "./AdminCategoriesTable";
+import { Toaster, toaster } from "../ui/toaster";
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -26,8 +27,37 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState(null);
-  const [daysToDelete, setDaysToDelete] = useState(30); // Default value for days
+  const [daysToDelete, setDaysToDelete] = useState(30);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      setLoading(true);
+      const user = localStorage.getItem("loggedInUser");
+      const parsedUser = JSON.parse(user);
+      if (user) {
+        if (parsedUser.userRole === "ADMIN") {
+          setLoading(false);
+        } else {
+          toaster.create({
+            title: "Regular users can't access this page",
+            type: "error",
+            duration: 6000,
+          });
+          navigate("/", { replace: true });
+        }
+      } else {
+        toaster.create({
+          title: "You must be logged in to create tickets",
+          type: "error",
+          duration: 6000,
+        });
+        navigate("/", { replace: true });
+      }
+    };
+    checkUser();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -63,6 +93,38 @@ const Admin = () => {
     fetchCategories();
   }, []);
 
+  const [loadingCleanup, setLoadingCleanup] = useState(true);
+
+  useEffect(() => {
+    const fetchCleanupPeriod = async () => {
+      try {
+        const response = await fetch(
+          "https://ticketswap-backend.onrender.com/api/config/ticket-cleanup-period",
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const cleanupDays = Math.round(
+            data.cleanupPeriodInSeconds / (24 * 60 * 60)
+          );
+          setDaysToDelete(cleanupDays);
+        } else {
+          console.error("Failed to fetch cleanup period.");
+        }
+      } catch (err) {
+        console.error("Error fetching cleanup period:", err);
+      } finally {
+        setLoadingCleanup(false);
+      }
+    };
+
+    fetchCleanupPeriod();
+  }, []);
+
   const handleDeactivate = async (userId) => {
     try {
       const response = await fetch(
@@ -84,31 +146,41 @@ const Admin = () => {
     navigate(`/report/${userId}`);
   };
 
-  const handleAddAdmin = async (userId) => {
+  const handleChangeRole = async (user) => {
     try {
-      const response = await fetch(
-        `https://ticketswap-backend.onrender.com/api/config/make-user-admin/${userId}`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-  
+      const endpoint =
+        user.userRole === "ADMIN"
+          ? `https://ticketswap-backend.onrender.com/api/config/make-regular-user/${user.id}`
+          : `https://ticketswap-backend.onrender.com/api/config/make-user-admin/${user.id}`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        credentials: "include",
+      });
+
       if (response.ok) {
-        console.log(`User ${userId} was successfully made an admin.`);
-        // Optionally update the UI if needed, e.g., mark the user as admin
+        toaster.create({
+          title: "Changed user role successfully!",
+          type: "error",
+          duration: 6000,
+        });
         setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user.id === userId ? { ...user, isAdmin: true } : user
+          prevUsers.map((parseUser) =>
+            parseUser.id === user.id
+              ? {
+                  ...parseUser,
+                  userRole: user.userRole === "ADMIN" ? "REGULAR" : "ADMIN",
+                }
+              : parseUser
           )
         );
       } else {
-        console.error(`Failed to make user ${userId} an admin.`);
+        console.error(`Failed to update role for user ${user.id}.`);
       }
     } catch (err) {
-      console.error("Error making user an admin:", err);
+      console.error("Error updating user role:", err);
     }
-  };  
+  };
 
   const handleAddCategory = async (newCategory) => {
     try {
@@ -182,14 +254,45 @@ const Admin = () => {
     }
   };
 
+  const handleSaveCleanupPeriod = async () => {
+    try {
+      const payload = { cleanupPeriodInSeconds: daysToDelete * 24 * 60 * 60 };
+
+      const response = await fetch(
+        "https://ticketswap-backend.onrender.com/api/config/ticket-cleanup-period",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        toaster.create({
+          title: "Cleanup period updated successfully!",
+          type: "success",
+          duration: 5000,
+        });
+      } else {
+        console.error("Failed to update cleanup period.");
+      }
+    } catch (err) {
+      console.error("Error updating cleanup period:", err);
+    }
+  };
+
   if (loading || loadingCategories) {
     return (
-      <Center h="88vh">
-        <Flex direction={"column"} align={"center"} gap={"20px"}>
-          <Spinner size="xl" />
-          <Text>Loading...</Text>
-        </Flex>
-      </Center>
+      <>
+        <Toaster />
+        <Center h="88vh">
+          <Flex direction={"column"} align={"center"} gap={"20px"}>
+            <Spinner size="xl" />
+            <Text>Loading...</Text>
+          </Flex>
+        </Center>
+      </>
     );
   }
 
@@ -212,7 +315,7 @@ const Admin = () => {
         users={users}
         handleDeactivate={handleDeactivate}
         handleGenerateIzv={handleGenerateIzv}
-        handleAddAdmin={handleAddAdmin}
+        handleChangeRole={handleChangeRole}
       />
       <Separator marginTop={"20px"} marginBottom={"20px"} />
       <AdminCategoriesTable
@@ -224,14 +327,27 @@ const Admin = () => {
       />
       <Separator marginTop={"20px"} marginBottom={"20px"} />
       <Heading as="h1" size="xl" mb={4}>
-        Number of days it will take for a ticket to go from deactivated to deleted:
+        Number of days it will take for a ticket to go from deactivated to
+        deleted:
       </Heading>
       <Stack>
         <HStack>
-          <NumberInputRoot size="lg" defaultValue="30">
-            <NumberInputField />
-          </NumberInputRoot>
-          <Button colorScheme="teal" size="lg">
+          {loadingCleanup ? (
+            <Spinner size="md" />
+          ) : (
+            <NumberInputRoot
+              size="lg"
+              value={daysToDelete}
+              onValueChange={(e) => setDaysToDelete(Number(e.value) || 0)}
+            >
+              <NumberInputField />
+            </NumberInputRoot>
+          )}
+          <Button
+            colorScheme="teal"
+            size="lg"
+            onClick={handleSaveCleanupPeriod}
+          >
             Save
           </Button>
         </HStack>

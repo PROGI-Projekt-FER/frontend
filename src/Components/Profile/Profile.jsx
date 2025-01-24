@@ -13,13 +13,29 @@ import {
 import { Avatar } from "../ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { Field } from "../ui/field";
+import { Toaster, toaster } from "../ui/toaster";
 
 const Profile = () => {
   const [userInfo, setUserInfo] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
+  useEffect(() => {
+    setLoading(true);
+    const user = localStorage.getItem("loggedInUser");
+    if (user) {
+      setLoading(false);
+    } else {
+      toaster.create({
+        title: "You must be logged in to create tickets",
+        type: "error",
+        duration: 6000,
+      });
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
   useEffect(() => {
     const apiCall = async () => {
       try {
@@ -47,67 +63,73 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <Box p={4}>
-        <Center h="88vh">
-          <Flex direction={"column"} align={"center"} gap={"20px"}>
-            <Spinner size="xl" />
-            <Text>Loading...</Text>
-          </Flex>
-        </Center>
-      </Box>
+      <>
+        <Toaster />
+        <Box p={4}>
+          <Center h="88vh">
+            <Flex direction={"column"} align={"center"} gap={"20px"}>
+              <Spinner size="xl" />
+              <Text>Loading...</Text>
+            </Flex>
+          </Center>
+        </Box>{" "}
+      </>
     );
   }
 
   return (
-    <Center h="88vh">
-      <Box
-        p="6"
-        width="400px"
-        mx="auto"
-        bg="gray.50"
-        borderRadius="md"
-        boxShadow="md"
-      >
-        <VStack>
-          <Avatar
-            size="lg"
-            name={`${userInfo?.firstName || ""} ${userInfo?.lastName || ""}`}
-            src={userInfo?.profilePicUrl}
-          />
+    <>
+      <Toaster />
+      <Center h="88vh">
+        <Box
+          p="6"
+          width="400px"
+          mx="auto"
+          bg="gray.50"
+          borderRadius="md"
+          boxShadow="md"
+        >
+          <VStack>
+            <Avatar
+              size="lg"
+              name={`${userInfo?.firstName || ""} ${userInfo?.lastName || ""}`}
+              src={userInfo?.profilePicUrl}
+            />
 
-          <Heading size="md">{`${userInfo?.firstName || ""} ${
-            userInfo?.lastName || ""
-          }`}</Heading>
-          <Field label="Username">
-            <Text color="gray.500">{userInfo?.username || "-"}</Text>{" "}
-          </Field>
+            <Heading size="md">{`${userInfo?.firstName || ""} ${
+              userInfo?.lastName || ""
+            }`}</Heading>
+            <Field label="Username">
+              <Text color="gray.500">{userInfo?.username || "-"}</Text>{" "}
+            </Field>
 
-          <Field label="Email">
-            <Text color="gray.500">{userInfo?.email || "-"}</Text>
-          </Field>
-          <Field label="Preferred Category">
-            <Badge
-              bgColor={userInfo?.preferredCategory?.colorHexCode}
-              color="white"
-              px="2"
-              py="1"
-              borderRadius="md"
-              fontSize="sm"
+            <Field label="Email">
+              <Text color="gray.500">{userInfo?.email || "-"}</Text>
+            </Field>
+            <Field label="Preferred Category">
+              <Badge
+                bgColor={userInfo?.preferredCategory?.colorHexCode}
+                color="white"
+                px="2"
+                py="1"
+                borderRadius="md"
+                fontSize="sm"
+              >
+                {userInfo?.preferredCategory?.name}
+              </Badge>
+            </Field>
+            <Button
+              colorScheme="blue"
+              size="sm"
+              onClick={handleEditClick}
+              marginTop={"10px"}
             >
-              {userInfo?.preferredCategory?.name}
-            </Badge>
-          </Field>
-          <Button
-            colorScheme="blue"
-            size="sm"
-            onClick={handleEditClick}
-            marginTop={"10px"}
-          >
-            Edit
-          </Button>
-        </VStack>
-      </Box>
-    </Center>
+              Edit
+            </Button>
+          </VStack>
+        </Box>
+      </Center>
+    </>
   );
 };
 

@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Input,
+  InputGroup,
   Stack,
   Center,
   Flex,
@@ -20,6 +21,7 @@ import {
 } from "../ui/select";
 import { createListCollection } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { MdSearch } from "react-icons/md";
 
 const CreateTicket = () => {
   const navigate = useNavigate();
@@ -237,16 +239,19 @@ const CreateTicket = () => {
               </SelectRoot>
 
               {categoryId === "1" && (
-                <Field label="Artist">
-                  <Input
-                    placeholder="Enter artist name"
-                    value={artist}
-                    onChange={(e) => setArtist(e.target.value)}
-                  />
+                <Field label="Artistt ">
+                  <InputGroup flex="1" startElement={<MdSearch />}>
+                    <MdSearch />
+                    <Input
+                      placeholder="Enter artistt name"
+                      value={artist}
+                      onChange={(e) => setArtist(e.target.value)}
+                    />
+                  </InputGroup>
                 </Field>
               )}
 
-              <Field label="Description">
+              <Field label="Descriptionnn">
                 <Input
                   placeholder="Enter description"
                   value={description}
