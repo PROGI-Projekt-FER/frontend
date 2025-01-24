@@ -153,7 +153,6 @@ export default function TicketDetails() {
         description: "Action completed successfully.",
         type: "success",
       });
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       setOpen(false);
     } catch (err) {
       setOpen(false);
@@ -194,7 +193,6 @@ export default function TicketDetails() {
         description: "Swap request initiated successfully.",
         type: "success",
       });
-      await new Promise((resolve) => setTimeout(resolve, 2000));
       setOpen(false);
     } catch (err) {
       setOpen(false);

@@ -170,8 +170,6 @@ const CreateTicket = () => {
           title: "Ticket created successfully",
           type: "success",
         });
-        setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
         window.location.href = "/browse-tickets";
       } else {
         toaster.create({ title: "Error while creating ticket", type: "error" });
