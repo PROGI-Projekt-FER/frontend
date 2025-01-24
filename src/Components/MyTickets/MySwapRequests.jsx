@@ -8,11 +8,14 @@ import {
   MdClose,
 } from "react-icons/md";
 import SmallTicketCard from "../Shared/SmallTicketCard";
+import { useNavigate } from "react-router-dom";
 
 const MySwapRequests = () => {
   const [tickets, setTickets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -55,11 +58,12 @@ const MySwapRequests = () => {
         }
       );
 
+      window.location.reload();
+
       if (!response.ok) {
         throw new Error(`Failed to respond to request: ${response.statusText}`);
       }
 
-      // Update tickets state after successful response
       setTickets((prevTickets) =>
         prevTickets.filter((ticket) => ticket.sendingTicket.id !== requestId)
       );

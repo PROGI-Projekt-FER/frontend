@@ -28,11 +28,8 @@ const EditTicket = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
     const user = localStorage.getItem("loggedInUser");
-    if (user) {
-      setLoading(false);
-    } else {
+    if (!user) {
       toaster.create({
         title: "You must be logged in to create tickets",
         type: "error",
@@ -41,6 +38,8 @@ const EditTicket = () => {
       navigate("/", { replace: true });
     }
   }, [navigate]);
+
+  const [status, setStatus] = useState("");
   const [ticketId, setTicketId] = useState("");
   const [eventId, setEventId] = useState("");
   const [venueId, setVenueId] = useState("");

@@ -117,11 +117,6 @@ export default function TicketDetails() {
         setLoading(false);
       } catch (err) {
         setError(err.message);
-        toaster.create({
-          title: "Error fetching ticket",
-          description: err.message,
-          type: "error",
-        });
       } finally {
         setLoading(false);
       }
@@ -158,12 +153,7 @@ export default function TicketDetails() {
           value: ticket.id.toString(),
         }));
         setMyTickets(createListCollection({ items: myTicketsList }));
-      } catch (error) {
-        toaster.create({
-          title: "Failed to fetch my tickets",
-          type: "error",
-        });
-      }
+      } catch (error) {}
     };
     fetchMyTickets();
   }, [isLoggedIn]);
