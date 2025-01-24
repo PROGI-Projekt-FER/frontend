@@ -46,6 +46,9 @@ export default function TicketDetails() {
   const [open, setOpen] = useState(false);
   const [weather, setWeather] = useState(null);
 
+  const [myTicketsRaw, setMyTicketsRaw] = useState(null);
+  const [isMyTicket, setIsMyTicket] = useState(false);
+
   const formatEventDate = (dateString) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, "0");
@@ -128,6 +131,8 @@ export default function TicketDetails() {
         );
         const data = await response.json();
 
+        setMyTicketsRaw(data);
+
         const filteredTransactions = data.filter(
           (ticket) => ticket.status === "SWAP"
         );
@@ -150,6 +155,30 @@ export default function TicketDetails() {
     };
     fetchMyTickets();
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!ticket || !isLoggedIn || !myTicketsRaw) {
+      return;
+    }
+    setLoading(true);
+
+    const checkIfMyTicket = async () => {
+      console.log(myTicketsRaw);
+      try {
+        const myTicketIds = myTicketsRaw.map((ticket) => ticket.id);
+
+        setIsMyTicket(myTicketIds.includes(ticket.id));
+        setLoading(false);
+      } catch (error) {
+        toaster.create({
+          title: error.toString(),
+          type: "error",
+        });
+      }
+    };
+
+    checkIfMyTicket();
+  }, [ticket, isLoggedIn, myTicketsRaw]);
 
   const handleSellConfirm = async () => {
     try {
@@ -399,7 +428,7 @@ export default function TicketDetails() {
                       {ticket.postedByUser.username}
                     </Card.Body>
                   </Card.Root>
-                  {!isLoggedIn ? (
+                  {!isLoggedIn && (
                     <Button
                       width={"20%"}
                       alignSelf={"center"}
@@ -414,7 +443,8 @@ export default function TicketDetails() {
                     >
                       {buttonText}
                     </Button>
-                  ) : (
+                  )}
+                  {isLoggedIn && !isMyTicket && (
                     <DialogRoot>
                       <DialogTrigger asChild>
                         <Button
