@@ -28,11 +28,8 @@ const EditTicket = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
     const user = localStorage.getItem("loggedInUser");
-    if (user) {
-      setLoading(false);
-    } else {
+    if (!user) {
       toaster.create({
         title: "You must be logged in to create tickets",
         type: "error",
@@ -41,6 +38,8 @@ const EditTicket = () => {
       navigate("/", { replace: true });
     }
   }, [navigate]);
+
+  const [status, setStatus] = useState("");
   const [ticketId, setTicketId] = useState("");
   const [eventId, setEventId] = useState("");
   const [venueId, setVenueId] = useState("");
@@ -78,6 +77,7 @@ const EditTicket = () => {
         if (response.ok) {
           const ticket = await response.json();
           setTicketId(ticket.id);
+          setStatus(ticket.status);
           setEventId(ticket.event.id);
           setVenueId(ticket.event.venue?.id);
           setEventName(ticket.event.title);
@@ -173,6 +173,17 @@ const EditTicket = () => {
       });
     }
 
+    let newStatus = offerType;
+    if (status === "DEACTIVATED" || status === "DELETED") {
+      newStatus = status;
+    } else {
+      if (offerType === "1") {
+        newStatus = "SWAP";
+      } else {
+        newStatus = "SELL";
+      }
+    }
+
     const payload = {
       id: ticketId,
       event: {
@@ -197,7 +208,7 @@ const EditTicket = () => {
           type: "string",
         },
       },
-      status: offerType === "1" ? "SWAP" : "SELL",
+      status: newStatus,
       description,
       price: offerType === "2" ? parseFloat(price) : 0,
       categoryIds: [parseInt(categoryId)],
