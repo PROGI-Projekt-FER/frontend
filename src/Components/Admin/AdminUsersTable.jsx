@@ -1,12 +1,13 @@
 import React from "react";
-import { Box, Button, Flex, Table, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Table, Text, Stack } from "@chakra-ui/react";
 import { Avatar } from "../ui/avatar";
+import { Radio, RadioGroup } from "../ui/radio";
 
 const AdminUsersTable = ({
   users,
   handleDeactivate,
   handleGenerateIzv,
-  handleAddAdmin,
+  handleChangeRole,
 }) => {
   return (
     <Box>
@@ -20,6 +21,7 @@ const AdminUsersTable = ({
             <Table.ColumnHeader>Username</Table.ColumnHeader>
             <Table.ColumnHeader>Preferred Category</Table.ColumnHeader>
             <Table.ColumnHeader>Actions</Table.ColumnHeader>
+            <Table.ColumnHeader>User role</Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -49,7 +51,7 @@ const AdminUsersTable = ({
                 )}
               </Table.Cell>
               <Table.Cell>
-                <Flex gap={"2px"}>
+                <Flex gap={"2px"} alignItems="center">
                   <Button
                     colorScheme="red"
                     size="sm"
@@ -64,13 +66,19 @@ const AdminUsersTable = ({
                   >
                     Generate report
                   </Button>
-                  <Button
-                    colorScheme="red"
-                    size="sm"
-                    onClick={() => handleAddAdmin(user.id)}
+                </Flex>
+              </Table.Cell>
+              <Table.Cell>
+                <Flex gap={"2px"} alignItems="center">
+                  <RadioGroup
+                    onChange={(value) => handleChangeRole(user)}
+                    value={user.userRole === "ADMIN" ? "ADMIN" : "REGULAR"}
                   >
-                    Make Admin
-                  </Button>
+                    <Stack direction="row">
+                      <Radio value="REGULAR">Regular User</Radio>
+                      <Radio value="ADMIN">Admin</Radio>
+                    </Stack>
+                  </RadioGroup>
                 </Flex>
               </Table.Cell>
             </Table.Row>
