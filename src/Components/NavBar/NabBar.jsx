@@ -1,10 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Flex, Box, Heading, Button, Link } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const user = localStorage.getItem("loggedInUser");
+  const [user, setUser] = useState(
+    () => JSON.parse(localStorage.getItem("loggedInUser")) || null
+  );
+
+  useEffect(() => {
+    function handleUserStateChange() {
+      setUser(JSON.parse(localStorage.getItem("loggedInUser")) || null);
+    }
+
+    window.addEventListener("userStateChange", handleUserStateChange);
+
+    return () => {
+      window.removeEventListener("userStateChange", handleUserStateChange);
+    };
+  }, []);
 
   async function handleLogout() {
     try {
@@ -47,7 +61,7 @@ const Navbar = () => {
       boxShadow="md"
     >
       <Heading size="md" cursor="pointer" onClick={() => navigate("/")}>
-        TicketSwapper
+        TicketSwapper1
       </Heading>
 
       <Flex alignItems="center" gap="4">
@@ -85,17 +99,17 @@ const Navbar = () => {
             fontWeight="bold"
             color="white"
           >
-            Profile{" "}
+            Profile
           </Link>
         )}
 
-        {user && (
+        {user && user.userRole === "ADMIN" && (
           <Link
             onClick={() => navigate("/admin")}
             fontWeight="bold"
             color="white"
           >
-            Admin{" "}
+            Admin
           </Link>
         )}
 

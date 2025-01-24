@@ -221,6 +221,7 @@ export default function TicketDetails() {
       const requestBody = {
         requestingTicketId: requestingTicketID,
         receivingTicketId: ticket.id,
+        shouldAttemptSwap: true,
       };
 
       const response = await fetch(
