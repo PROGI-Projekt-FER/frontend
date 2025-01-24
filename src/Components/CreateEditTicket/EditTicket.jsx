@@ -26,11 +26,16 @@ const EditTicket = () => {
   const id = params.slug;
   const navigate = useNavigate();
 
+  const [ticketId, setTicketId] = useState("");
+  const [eventId, setEventId] = useState("");
+  const [venueId, setVenueId] = useState("");
+  const [eventEntityId, setEventEntityId] = useState("");
   const [eventName, setEventName] = useState("");
   const [artist, setArtist] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [timestamp, setTimestamp] = useState("");
+  const [locationId, setLocationId] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [offerType, setOfferType] = useState("");
@@ -57,18 +62,25 @@ const EditTicket = () => {
         );
         if (response.ok) {
           const ticket = await response.json();
+          setTicketId(ticket.id);
+          setEventId(ticket.event.id);
+          setVenueId(ticket.event.venue?.id);
           setEventName(ticket.event.title);
           setArtist(ticket.event.eventEntity?.name || "");
-          setCategoryId(ticket.categories[0]?.id || "");
+          setEventEntityId(ticket.event.eventEntity?.id);
+          setCategoryId(ticket.categories[0]?.id.toString() || "");
           setDescription(ticket.event.description);
           setTimestamp(ticket.event.eventDate);
+          setLocationId(ticket.event.venue.location.id);
           setAddress(ticket.event.venue.location.address);
           setCity(ticket.event.venue.location.city);
           setOfferType(ticket.status === "SWAP" ? "1" : "2");
           setPrice(ticket.price?.toString() || "");
-          setSwapCategoryId(
-            ticket.interestedInCategoryIds[0]?.toString() || ""
-          );
+          if (ticket.interestedInCategories) {
+            setSwapCategoryId(
+              ticket.interestedInCategories[0]?.id.toString() || ""
+            );
+          }
         } else {
           toaster.create({
             title: "Failed to fetch ticket details",
@@ -112,22 +124,60 @@ const EditTicket = () => {
         type: "error",
       });
     }
+    if (categoryId === "1" && !artist) {
+      return toaster.create({
+        title: "Artist Name is required for Music Events.",
+        type: "error",
+      });
+    }
+    if (!categoryId) {
+      return toaster.create({ title: "Category is required.", type: "error" });
+    }
+    if (!timestamp) {
+      return toaster.create({
+        title: "Event Time is required.",
+        type: "error",
+      });
+    }
+    if (!address) {
+      return toaster.create({ title: "Address is required.", type: "error" });
+    }
+    if (!city) {
+      return toaster.create({ title: "City is required.", type: "error" });
+    }
+    if (offerType === "1" && !swapCategoryId) {
+      return toaster.create({
+        title: "Swap Category is required.",
+        type: "error",
+      });
+    }
+    if (offerType === "2" && (!price || isNaN(parseFloat(price)))) {
+      return toaster.create({
+        title: "Valid Price is required.",
+        type: "error",
+      });
+    }
 
     const payload = {
+      id: ticketId,
       event: {
+        id: eventId,
         title: eventName,
         description,
         eventDate: timestamp,
         venue: {
+          id: venueId,
           name: address,
           capacity: 2500,
           location: {
+            id: locationId,
             country: "",
             city,
             address,
           },
         },
         eventEntity: {
+          id: eventEntityId,
           name: artist,
           type: "string",
         },
@@ -156,7 +206,7 @@ const EditTicket = () => {
           title: "Ticket updated successfully",
           type: "success",
         });
-        navigate("/browse-tickets");
+        navigate("/my-tickets");
       } else {
         toaster.create({ title: "Error updating ticket", type: "error" });
       }
@@ -190,8 +240,11 @@ const EditTicket = () => {
                   onChange={(e) => setEventName(e.target.value)}
                 />
               </Field>
-
-              <SelectRoot collection={categories} size="sm">
+              <SelectRoot
+                collection={categories}
+                size="sm"
+                defaultValue={categoryId ? [categoryId] : []}
+              >
                 <SelectLabel>Category</SelectLabel>
                 <SelectTrigger>
                   <SelectValueText placeholder="Select category" />
@@ -260,8 +313,11 @@ const EditTicket = () => {
                   />
                 </Field>
               </Flex>
-
-              <SelectRoot collection={swapOrSell} size="sm">
+              <SelectRoot
+                collection={swapOrSell}
+                size="sm"
+                defaultValue={offerType ? [offerType] : []}
+              >
                 <SelectLabel>Offer Type</SelectLabel>
                 <SelectTrigger>
                   <SelectValueText placeholder="Select offer Type" />
@@ -278,9 +334,12 @@ const EditTicket = () => {
                   ))}
                 </SelectContent>
               </SelectRoot>
-
               {offerType === "1" && (
-                <SelectRoot collection={categories} size="sm">
+                <SelectRoot
+                  collection={categories}
+                  size="sm"
+                  defaultValue={swapCategoryId ? [swapCategoryId] : []}
+                >
                   <SelectLabel>Swap Category</SelectLabel>
                   <SelectTrigger>
                     <SelectValueText placeholder="Select category for swap" />
