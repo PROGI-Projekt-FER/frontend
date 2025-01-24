@@ -9,9 +9,12 @@ import {
   Link,
   Spinner,
   Center,
+  VStack,
 } from "@chakra-ui/react";
 
 import google_icon from "../Assets/google.png";
+
+const API_BASE_URL = "https://ticketswap-backend.onrender.com/api/config";
 
 const LoginSignup = () => {
   const [user, setUser] = useState(null);
@@ -42,13 +45,31 @@ const LoginSignup = () => {
     fetchUserInfo();
   }, []);
 
+  async function handleRoleChange(endpoint) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUser(updatedUser);
+      } else {
+        console.error("Failed to update role:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error updating role:", error);
+    }
+  }
+
   async function logout() {
     try {
       const response = await fetch(
         "https://ticketswap-backend.onrender.com/api/logout",
         {
           method: "POST",
-          credentials: "include", // Ensures cookies or session tokens are sent
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -69,14 +90,12 @@ const LoginSignup = () => {
 
   if (loading) {
     return (
-      <Box p={4}>
-        <Center h="88vh">
-          <Flex direction={"column"} align={"center"} gap={"20px"}>
-            <Spinner size="xl" />
-            <Text>Loading...</Text>
-          </Flex>
-        </Center>
-      </Box>
+      <Center h="88vh">
+        <VStack>
+          <Spinner size="xl" />
+          <Text>Loading...</Text>
+        </VStack>
+      </Center>
     );
   }
 
@@ -90,20 +109,32 @@ const LoginSignup = () => {
         bg="white"
       >
         {user ? (
-          <>
-            <Heading size="md" mb="4">
+          <VStack spacing={4}>
+            <Heading size="md">
               Logged in as {user.username || "Unknown User"}
             </Heading>
-            <Text mb="4">Email: {user.email || "Unknown Email"}</Text>
+            <Text>Email: {user.email || "Unknown Email"}</Text>
             <Button colorScheme="red" width="full" onClick={logout}>
               Logout
             </Button>
-          </>
+            <Button
+              colorScheme="green"
+              width="full"
+              onClick={() => handleRoleChange("make-me-admin")}
+            >
+              Make Me Admin
+            </Button>
+            <Button
+              colorScheme="blue"
+              width="full"
+              onClick={() => handleRoleChange("make-me-regular-user")}
+            >
+              Make Me Regular User
+            </Button>
+          </VStack>
         ) : (
-          <>
-            <Box textAlign="center" mb="4">
-              <Heading size="lg">Login</Heading>
-            </Box>
+          <VStack spacing={4}>
+            <Heading size="lg">Login</Heading>
             <Link
               href="https://ticketswap-backend.onrender.com/oauth2/authorization/google"
               _hover={{ textDecoration: "none" }}
@@ -126,7 +157,7 @@ const LoginSignup = () => {
                 Continue with Google
               </Button>
             </Link>
-          </>
+          </VStack>
         )}
       </Box>
     </Flex>

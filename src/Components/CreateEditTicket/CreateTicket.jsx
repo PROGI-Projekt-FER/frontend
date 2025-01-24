@@ -25,20 +25,27 @@ const CreateTicket = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
-    const user = localStorage.getItem("loggedInUser");
-    if (user) {
-      setLoading(false);
-      setIsLoggedIn(true);
-    } else {
-      toaster.create({
-        title: "You must be logged in to create tickets",
-        type: "error",
-        duration: 6000,
-      });
-      navigate("/", { replace: true });
-    }
+    const checkUserPrivileges = async () => {
+      setLoading(true);
+      const user = localStorage.getItem("loggedInUser");
+      if (user) {
+        setLoading(false);
+        setIsLoggedIn(true);
+      } else {
+        toaster.create({
+          title: "You must be logged in to access this page",
+          type: "error",
+          duration: 6000,
+        });
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        navigate("/", { replace: true });
+      }
+    };
+    checkUserPrivileges();
   }, [navigate]);
+
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [eventName, setEventName] = useState("");
   const [artist, setArtist] = useState("");
@@ -53,9 +60,6 @@ const CreateTicket = () => {
   const [categories, setCategories] = useState(
     createListCollection({ items: [] })
   );
-
-  const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const swapOrSell = createListCollection({
     items: [

@@ -11,7 +11,7 @@ import {
   Image,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Toaster, toaster } from "../ui/toaster";
 import {
   DialogActionTrigger,
@@ -46,6 +46,9 @@ export default function TicketDetails() {
   const [open, setOpen] = useState(false);
   const [weather, setWeather] = useState(null);
 
+  const [myTicketsRaw, setMyTicketsRaw] = useState(null);
+  const [isMyTicket, setIsMyTicket] = useState(false);
+
   const formatEventDate = (dateString) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, "0");
@@ -55,6 +58,22 @@ export default function TicketDetails() {
     const minutes = String(date.getMinutes()).padStart(2, "0");
     return `${day}. ${month}. ${year}. ${hours}:${minutes}`;
   };
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUserPrivileges = async () => {
+      setLoading(true);
+      const user = localStorage.getItem("loggedInUser");
+      if (user) {
+        setLoading(false);
+        setIsLoggedIn(true);
+      }
+    };
+    checkUserPrivileges();
+  }, [navigate]);
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -100,6 +119,10 @@ export default function TicketDetails() {
   }, [params.slug]);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+
     const fetchMyTickets = async () => {
       try {
         const response = await fetch(
@@ -107,6 +130,8 @@ export default function TicketDetails() {
           { credentials: "include" }
         );
         const data = await response.json();
+
+        setMyTicketsRaw(data);
 
         const filteredTransactions = data.filter(
           (ticket) => ticket.status === "SWAP"
@@ -129,7 +154,31 @@ export default function TicketDetails() {
       }
     };
     fetchMyTickets();
-  }, []);
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!ticket || !isLoggedIn || !myTicketsRaw) {
+      return;
+    }
+    setLoading(true);
+
+    const checkIfMyTicket = async () => {
+      console.log(myTicketsRaw);
+      try {
+        const myTicketIds = myTicketsRaw.map((ticket) => ticket.id);
+
+        setIsMyTicket(myTicketIds.includes(ticket.id));
+        setLoading(false);
+      } catch (error) {
+        toaster.create({
+          title: error.toString(),
+          type: "error",
+        });
+      }
+    };
+
+    checkIfMyTicket();
+  }, [ticket, isLoggedIn, myTicketsRaw]);
 
   const handleSellConfirm = async () => {
     try {
@@ -379,128 +428,147 @@ export default function TicketDetails() {
                       {ticket.postedByUser.username}
                     </Card.Body>
                   </Card.Root>
-                  <DialogRoot>
-                    <DialogTrigger asChild>
-                      <Button
-                        width={"20%"}
-                        alignSelf={"center"}
-                        variant={"solid"}
-                        colorPalette={"gray"}
-                      >
-                        {buttonText}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          {ticket.status === "SWAP"
-                            ? "Confirm Swap"
-                            : "Confirm Purchase"}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <DialogBody>
-                        {ticket.status === "SWAP" ? (
-                          <Box>
-                            <Text>
-                              Are you sure you want to initiate a swap? This
-                              user is looking for a ticket in category{" "}
-                              <Badge
-                                bgColor={
-                                  ticket.interestedInCategories[0]?.colorHexCode
-                                }
-                                color="white"
-                                px="2"
-                                py="1"
-                                borderRadius="md"
-                                fontSize="sm"
+                  {!isLoggedIn && (
+                    <Button
+                      width={"20%"}
+                      alignSelf={"center"}
+                      variant={"solid"}
+                      colorPalette={"gray"}
+                      onClick={() =>
+                        toaster.create({
+                          title: "Please log in to perform this action",
+                          type: "error",
+                        })
+                      }
+                    >
+                      {buttonText}
+                    </Button>
+                  )}
+                  {isLoggedIn && !isMyTicket && (
+                    <DialogRoot>
+                      <DialogTrigger asChild>
+                        <Button
+                          width={"20%"}
+                          alignSelf={"center"}
+                          variant={"solid"}
+                          colorPalette={"gray"}
+                        >
+                          {buttonText}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>
+                            {ticket.status === "SWAP"
+                              ? "Confirm Swap"
+                              : "Confirm Purchase"}
+                          </DialogTitle>
+                        </DialogHeader>
+                        <DialogBody>
+                          {ticket.status === "SWAP" ? (
+                            <Box>
+                              <Text>
+                                Are you sure you want to initiate a swap? This
+                                user is looking for a ticket in category{" "}
+                                <Badge
+                                  bgColor={
+                                    ticket.interestedInCategories[0]
+                                      ?.colorHexCode
+                                  }
+                                  color="white"
+                                  px="2"
+                                  py="1"
+                                  borderRadius="md"
+                                  fontSize="sm"
+                                >
+                                  {ticket.interestedInCategories[0]?.name}
+                                </Badge>
+                                .
+                              </Text>
+                              <SelectRoot
+                                collection={myTickets}
+                                size="sm"
+                                marginTop={"10px"}
                               >
-                                {ticket.interestedInCategories[0]?.name}
-                              </Badge>
-                              .
-                            </Text>
-                            <SelectRoot
-                              collection={myTickets}
-                              size="sm"
-                              marginTop={"10px"}
-                            >
-                              <SelectLabel>
-                                Select your ticket you want to swap
-                              </SelectLabel>
-                              <SelectTrigger>
-                                <SelectValueText placeholder="Select category" />
-                              </SelectTrigger>
-                              <SelectContent zIndex={1500}>
-                                {myTickets?.items?.length > 0 ? (
-                                  myTickets.items.map((ticket) => (
+                                <SelectLabel>
+                                  Select your ticket you want to swap
+                                </SelectLabel>
+                                <SelectTrigger>
+                                  <SelectValueText placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent zIndex={1500}>
+                                  {myTickets?.items?.length > 0 ? (
+                                    myTickets.items.map((ticket) => (
+                                      <SelectItem
+                                        item={ticket}
+                                        key={ticket.value}
+                                        onClick={() =>
+                                          setRequestingTicketID(ticket.value)
+                                        }
+                                      >
+                                        <Flex direction={"column"}>
+                                          <Badge
+                                            width={"fit-content"}
+                                            bgColor={
+                                              ticket.category?.colorHexCode
+                                            }
+                                            color="white"
+                                            px="2"
+                                            py="1"
+                                            borderRadius="md"
+                                            fontSize="sm"
+                                          >
+                                            {ticket.category?.name}
+                                          </Badge>
+                                          {ticket.label}
+                                        </Flex>
+                                      </SelectItem>
+                                    ))
+                                  ) : (
                                     <SelectItem
-                                      item={ticket}
-                                      key={ticket.value}
-                                      onClick={() =>
-                                        setRequestingTicketID(ticket.value)
-                                      }
+                                      item={{
+                                        label: "No categories available",
+                                        value: "",
+                                      }}
+                                      disabled
                                     >
-                                      <Flex direction={"column"}>
-                                        <Badge
-                                          width={"fit-content"}
-                                          bgColor={
-                                            ticket.category?.colorHexCode
-                                          }
-                                          color="white"
-                                          px="2"
-                                          py="1"
-                                          borderRadius="md"
-                                          fontSize="sm"
-                                        >
-                                          {ticket.category?.name}
-                                        </Badge>
-                                        {ticket.label}
-                                      </Flex>
+                                      No categories available
                                     </SelectItem>
-                                  ))
-                                ) : (
-                                  <SelectItem
-                                    item={{
-                                      label: "No categories available",
-                                      value: "",
-                                    }}
-                                    disabled
-                                  >
-                                    No categories available
-                                  </SelectItem>
-                                )}
-                              </SelectContent>
-                            </SelectRoot>
-                          </Box>
-                        ) : (
-                          <Text>
-                            Are you sure you want to purchase this ticket for{" "}
-                            {ticket.price}€?
-                          </Text>
-                        )}
-                      </DialogBody>
-                      <DialogFooter>
-                        <DialogActionTrigger asChild>
-                          <Button variant="solid" colorPalette="red">
-                            Cancel
-                          </Button>
-                        </DialogActionTrigger>
-                        <DialogActionTrigger asChild>
-                          <Button
-                            variant="solid"
-                            colorPalette="green"
-                            onClick={
-                              ticket.status === "SWAP"
-                                ? handleSwapConfirm
-                                : handleSellConfirm
-                            }
-                          >
-                            Confirm
-                          </Button>
-                        </DialogActionTrigger>
-                      </DialogFooter>
-                      <DialogCloseTrigger />
-                    </DialogContent>
-                  </DialogRoot>
+                                  )}
+                                </SelectContent>
+                              </SelectRoot>
+                            </Box>
+                          ) : (
+                            <Text>
+                              Are you sure you want to purchase this ticket for{" "}
+                              {ticket.price}€?
+                            </Text>
+                          )}
+                        </DialogBody>
+                        <DialogFooter>
+                          <DialogActionTrigger asChild>
+                            <Button variant="solid" colorPalette="red">
+                              Cancel
+                            </Button>
+                          </DialogActionTrigger>
+                          <DialogActionTrigger asChild>
+                            <Button
+                              variant="solid"
+                              colorPalette="green"
+                              onClick={
+                                ticket.status === "SWAP"
+                                  ? handleSwapConfirm
+                                  : handleSellConfirm
+                              }
+                            >
+                              Confirm
+                            </Button>
+                          </DialogActionTrigger>
+                        </DialogFooter>
+                        <DialogCloseTrigger />
+                      </DialogContent>
+                    </DialogRoot>
+                  )}
 
                   <Card.Root border={"none"} width={"40%"}>
                     <Card.Header textAlign={"right"} paddingRight={"0"}>
