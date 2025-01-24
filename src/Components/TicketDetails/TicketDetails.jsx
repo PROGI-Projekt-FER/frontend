@@ -45,6 +45,7 @@ export default function TicketDetails() {
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
   const [weather, setWeather] = useState(null);
+  const [artistImage, setArtistImage] = useState(null);
 
   const [myTicketsRaw, setMyTicketsRaw] = useState(null);
   const [isMyTicket, setIsMyTicket] = useState(false);
@@ -103,6 +104,17 @@ export default function TicketDetails() {
             setWeather(weatherData);
           }
         }
+
+        if (data.event.eventEntity.artistId) {
+          const response = await fetch(
+            `https://ticketswap-backend.onrender.com/api/tickets/artist/${data.event.eventEntity.artistId}`
+          );
+          if (!response.ok) throw new Error("Failed to fetch artist image");
+
+          const data2 = await response.json();
+          setArtistImage(data2.imageUrl || null);
+        }
+        setLoading(false);
       } catch (err) {
         setError(err.message);
         toaster.create({
@@ -356,26 +368,40 @@ export default function TicketDetails() {
                   </Badge>
                 </Flex>
 
-                <Flex
-                  justifyContent={"space-between"}
-                  alignItems={"flex-start"}
-                  direction={"column"}
-                  gap={"10px"}
-                >
-                  <Flex alignItems="center">
-                    <MdLocationOn size={"30px"} />
-                    <Text fontSize={"lg"} marginLeft="8px">
-                      {ticket.event.venue.location.address},{" "}
-                      {ticket.event.venue.location.city},{" "}
-                      {ticket.event.venue.location.country}
-                    </Text>
+                <Flex justifyContent={"space-between"}>
+                  <Flex
+                    justifyContent={"space-between"}
+                    alignItems={"flex-start"}
+                    direction={"column"}
+                    gap={"10px"}
+                  >
+                    <Flex alignItems="center">
+                      <MdLocationOn size={"30px"} />
+                      <Text fontSize={"lg"} marginLeft="8px">
+                        {ticket.event.venue.location.address},{" "}
+                        {ticket.event.venue.location.city},{" "}
+                        {ticket.event.venue.location.country}
+                      </Text>
+                    </Flex>
+                    <Flex alignItems="center">
+                      <MdCalendarToday size={"30px"} />
+                      <Text fontSize={"lg"} marginLeft="8px">
+                        {formatEventDate(ticket.event.eventDate)}
+                      </Text>
+                    </Flex>
                   </Flex>
-                  <Flex alignItems="center">
-                    <MdCalendarToday size={"30px"} />
-                    <Text fontSize={"lg"} marginLeft="8px">
-                      {formatEventDate(ticket.event.eventDate)}
-                    </Text>
-                  </Flex>
+                  {artistImage && (
+                    <img
+                      height={"70px"}
+                      width={"70px"}
+                      src={artistImage}
+                      alt="Artist"
+                      style={{
+                        borderRadius: "12px",
+                        border: "2px solid black",
+                      }}
+                    />
+                  )}
                 </Flex>
 
                 {renderWeatherDetails()}
