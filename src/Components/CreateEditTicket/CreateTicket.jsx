@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Button,
   Card,
@@ -7,8 +7,14 @@ import {
   Center,
   Flex,
   Spinner,
+  Text,
+  List,
+  ListItem,
+  Box,
 } from "@chakra-ui/react";
 import { Field } from "../ui/field";
+import { InputGroup } from "../ui/input-group";
+import debounce from "lodash.debounce";
 import { Toaster, toaster } from "../ui/toaster";
 import {
   SelectContent,
@@ -20,6 +26,7 @@ import {
 } from "../ui/select";
 import { createListCollection } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { MdSearch } from "react-icons/md";
 
 const CreateTicket = () => {
   const navigate = useNavigate();
@@ -49,6 +56,7 @@ const CreateTicket = () => {
 
   const [eventName, setEventName] = useState("");
   const [artist, setArtist] = useState("");
+  const [artistId, setArtistId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [timestamp, setTimestamp] = useState("");
@@ -89,6 +97,55 @@ const CreateTicket = () => {
     };
     fetchCategories();
   }, []);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [results, setResults] = useState([]);
+
+  const searchArtist = async (query) => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/tickets/autocomplete/artist?query=${encodeURIComponent(
+          query
+        )}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch artists");
+      }
+
+      const data = await response.json();
+      setResults(data);
+    } catch (error) {
+      console.error("Error fetching artists:", error);
+      setResults([]);
+    }
+  };
+
+  const debouncedFetchArtists = useCallback(
+    debounce((query) => searchArtist(query), 1000),
+    []
+  );
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setArtist(query);
+    setSearchTerm(query);
+  };
+
+  useEffect(() => {
+    debouncedFetchArtists(searchTerm);
+  }, [searchTerm, debouncedFetchArtists]);
+
+  const handleSelectArtist = (selection) => {
+    console.log(selection);
+    setArtist(Object.keys(selection)[0]);
+    setArtistId(selection[Object.keys(selection)[0]]);
+  };
 
   const handleSubmit = async () => {
     if (!eventName) {
@@ -147,6 +204,7 @@ const CreateTicket = () => {
         },
         eventEntity: {
           name: artist,
+          artistId: artistId,
           type: "string",
         },
       },
@@ -212,7 +270,6 @@ const CreateTicket = () => {
                   onChange={(e) => setEventName(e.target.value)}
                 />
               </Field>
-
               <SelectRoot collection={categories} size="sm">
                 <SelectLabel>Category</SelectLabel>
                 <SelectTrigger>
@@ -220,7 +277,7 @@ const CreateTicket = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {categories?.items?.length > 0 ? (
-                    categories.items.map((category) => (
+                    categories.items.slice(0, 5).map((category) => (
                       <SelectItem
                         item={category}
                         key={category.value}
@@ -239,15 +296,44 @@ const CreateTicket = () => {
                   )}
                 </SelectContent>
               </SelectRoot>
-
               {categoryId === "1" && (
                 <Field label="Artist">
-                  <Input
-                    placeholder="Enter artist name"
-                    value={artist}
-                    onChange={(e) => setArtist(e.target.value)}
-                  />
+                  <InputGroup flex="1" startElement={<MdSearch />} width="full">
+                    <Input
+                      placeholder="Enter artist name"
+                      value={artist}
+                      onChange={handleSearchChange}
+                    />
+                  </InputGroup>
                 </Field>
+              )}
+              {Array.isArray(results) && results.length > 0 && (
+                <Box
+                  zIndex={20}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  boxShadow="md"
+                  p={3}
+                  bg="white"
+                  width="full"
+                  maxHeight="200px"
+                  overflowY="auto"
+                >
+                  {results.slice(0, 5).map((result, index) => {
+                    const key = Object.keys(result)[0];
+                    return (
+                      <Box
+                        key={`${key}-${index}`}
+                        p={3}
+                        borderRadius="md"
+                        _hover={{ bg: "gray.100", cursor: "pointer" }}
+                        onClick={() => handleSelectArtist(result)}
+                      >
+                        <Text fontWeight="bold">{key}</Text>
+                      </Box>
+                    );
+                  })}
+                </Box>
               )}
 
               <Field label="Description">
@@ -257,7 +343,6 @@ const CreateTicket = () => {
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </Field>
-
               <Field label="Event time">
                 <Input
                   type="datetime-local"
@@ -282,7 +367,6 @@ const CreateTicket = () => {
                   />
                 </Field>
               </Flex>
-
               <SelectRoot collection={swapOrSell} size="sm">
                 <SelectLabel>Offer Type</SelectLabel>
                 <SelectTrigger>
@@ -300,7 +384,6 @@ const CreateTicket = () => {
                   ))}
                 </SelectContent>
               </SelectRoot>
-
               {offerType === "1" && (
                 <SelectRoot collection={categories} size="sm">
                   <SelectLabel>Swap Category</SelectLabel>
@@ -308,7 +391,7 @@ const CreateTicket = () => {
                     <SelectValueText placeholder="Select category for swap" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.items.map((category) => (
+                    {categories.items.slice(0, 5).map((category) => (
                       <SelectItem
                         item={category}
                         key={category.value}
@@ -320,7 +403,6 @@ const CreateTicket = () => {
                   </SelectContent>
                 </SelectRoot>
               )}
-
               {offerType === "2" && (
                 <Field label="Price">
                   <Input
