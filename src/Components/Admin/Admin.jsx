@@ -10,6 +10,7 @@ import {
   Button,
   Stack,
   HStack,
+  HStack,
 } from "@chakra-ui/react";
 import {
   NumberInputField,
@@ -19,6 +20,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AdminUsersTable from "./AdminUsersTable";
 import AdminCategoriesTable from "./AdminCategoriesTable";
+import { Toaster, toaster } from "../ui/toaster";
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -27,7 +29,36 @@ const Admin = () => {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [error, setError] = useState(null);
   const [daysToDelete, setDaysToDelete] = useState(30);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      setLoading(true);
+      const user = localStorage.getItem("loggedInUser");
+      const parsedUser = JSON.parse(user);
+      if (user) {
+        if (parsedUser.userRole === "ADMIN") {
+          setLoading(false);
+        } else {
+          toaster.create({
+            title: "Regular users can't access this page",
+            type: "error",
+            duration: 6000,
+          });
+          navigate("/", { replace: true });
+        }
+      } else {
+        toaster.create({
+          title: "You must be logged in to create tickets",
+          type: "error",
+          duration: 6000,
+        });
+        navigate("/", { replace: true });
+      }
+    };
+    checkUser();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -95,8 +126,6 @@ const Admin = () => {
       );
 
       if (response.ok) {
-        console.log(`User ${userId} was successfully made an admin.`);
-        // Optionally update the UI if needed, e.g., mark the user as admin
         setUsers((prevUsers) =>
           prevUsers.map((user) =>
             user.id === userId ? { ...user, isAdmin: true } : user
@@ -184,12 +213,15 @@ const Admin = () => {
 
   if (loading || loadingCategories) {
     return (
-      <Center h="88vh">
-        <Flex direction={"column"} align={"center"} gap={"20px"}>
-          <Spinner size="xl" />
-          <Text>Loading...</Text>
-        </Flex>
-      </Center>
+      <>
+        <Toaster />
+        <Center h="88vh">
+          <Flex direction={"column"} align={"center"} gap={"20px"}>
+            <Spinner size="xl" />
+            <Text>Loading...</Text>
+          </Flex>
+        </Center>
+      </>
     );
   }
 
