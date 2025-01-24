@@ -40,6 +40,52 @@ const MyTicketsTable = () => {
     return <Text color="red.500">Failed to load tickets: {error}</Text>;
   }
 
+  const handleStatusChange = async (ticket) => {
+    try {
+      let newStatus;
+
+      if (ticket.status === "SELL" || ticket.status === "SWAP") {
+        newStatus = "DEACTIVATED";
+      } else if (ticket.status === "DEACTIVATED") {
+        if (ticket.price !== 0) {
+          newStatus = "SELL";
+        } else if (ticket.interestedInCategories.length > 0) {
+          newStatus = "SWAP";
+        } else {
+          throw new Error("Cannot determine new status.");
+        }
+      } else {
+        throw new Error("Invalid ticket status.");
+      }
+
+      const response = await fetch(
+        `https://ticketswap-backend.onrender.com/api/tickets/${ticket.id}/change-status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ticketId: ticket.id,
+            ticketStatus: newStatus,
+          }),
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const updatedTicket = await response.json();
+      setTickets((prevTickets) =>
+        prevTickets.map((t) => (t.id === ticket.id ? updatedTicket : t))
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <>
       <Text fontSize="lg" mb={6}>
@@ -84,7 +130,12 @@ const MyTicketsTable = () => {
                       >
                         <MdEdit />
                       </IconButton>
-                      <IconButton aria-label="Delete Ticket" size="md" bg="red">
+                      <IconButton
+                        aria-label="Delete Ticket"
+                        size="md"
+                        bg="red"
+                        onClick={() => handleStatusChange(ticket)}
+                      >
                         <MdDelete />
                       </IconButton>
                     </Flex>
