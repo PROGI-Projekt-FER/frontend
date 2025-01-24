@@ -32,18 +32,31 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
-    const user = localStorage.getItem("loggedInUser");
-    if (user) {
-      setLoading(false);
-    } else {
-      toaster.create({
-        title: "You must be logged in to create tickets",
-        type: "error",
-        duration: 6000,
-      });
-      navigate("/", { replace: true });
-    }
+    const checkUser = async () => {
+      setLoading(true);
+      const user = localStorage.getItem("loggedInUser");
+      const parsedUser = JSON.parse(user);
+      if (user) {
+        if (parsedUser.userRole === "ADMIN") {
+          setLoading(false);
+        } else {
+          toaster.create({
+            title: "Regular users can't access this page",
+            type: "error",
+            duration: 6000,
+          });
+          navigate("/", { replace: true });
+        }
+      } else {
+        toaster.create({
+          title: "You must be logged in to create tickets",
+          type: "error",
+          duration: 6000,
+        });
+        navigate("/", { replace: true });
+      }
+    };
+    checkUser();
   }, [navigate]);
 
   useEffect(() => {

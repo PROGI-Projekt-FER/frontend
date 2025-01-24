@@ -59,6 +59,8 @@ const LoginSignup = () => {
       if (response.ok) {
         const updatedUser = await response.json();
         setUser(updatedUser);
+        localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+
         toaster.create({
           title:
             "Changed user role successfully! User now has a role: " +
@@ -130,6 +132,7 @@ const LoginSignup = () => {
                 Logout
               </Button>
               <Text>Note: Buttons below are for Dev purposes only</Text>
+              <Text>Current role: {user.userRole}</Text>
               <Button
                 colorScheme="green"
                 width="full"
