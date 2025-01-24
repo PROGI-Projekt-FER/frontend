@@ -11,6 +11,7 @@ import {
   List,
   ListItem,
   Box,
+  Separator,
 } from "@chakra-ui/react";
 import { Field } from "../ui/field";
 import { InputGroup } from "../ui/input-group";
@@ -100,7 +101,7 @@ const CreateTicket = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
-
+  const [artistSelectionOpen, setArtistSelectionOpen] = useState(false);
   const searchArtist = async (query) => {
     if (!query.trim()) {
       setResults([]);
@@ -132,6 +133,7 @@ const CreateTicket = () => {
   );
 
   const handleSearchChange = (e) => {
+    setArtistSelectionOpen(true);
     const query = e.target.value;
     setArtist(query);
     setSearchTerm(query);
@@ -145,6 +147,7 @@ const CreateTicket = () => {
     console.log(selection);
     setArtist(Object.keys(selection)[0]);
     setArtistId(selection[Object.keys(selection)[0]]);
+    setArtistSelectionOpen(false);
   };
 
   const handleSubmit = async () => {
@@ -307,34 +310,39 @@ const CreateTicket = () => {
                   </InputGroup>
                 </Field>
               )}
-              {Array.isArray(results) && results.length > 0 && (
-                <Box
-                  zIndex={20}
-                  borderWidth="1px"
-                  borderRadius="md"
-                  boxShadow="md"
-                  p={3}
-                  bg="white"
-                  width="full"
-                  maxHeight="200px"
-                  overflowY="auto"
-                >
-                  {results.slice(0, 5).map((result, index) => {
-                    const key = Object.keys(result)[0];
-                    return (
-                      <Box
-                        key={`${key}-${index}`}
-                        p={3}
-                        borderRadius="md"
-                        _hover={{ bg: "gray.100", cursor: "pointer" }}
-                        onClick={() => handleSelectArtist(result)}
-                      >
-                        <Text fontWeight="bold">{key}</Text>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              )}
+              {Array.isArray(results) &&
+                results.length > 0 &&
+                artistSelectionOpen && (
+                  <Box
+                    zIndex={20}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    boxShadow="md"
+                    p={3}
+                    bg="white"
+                    width="full"
+                    maxHeight="200px"
+                    overflowY="auto"
+                  >
+                    {results.slice(0, 5).map((result, index) => {
+                      const key = Object.keys(result)[0];
+                      return (
+                        <>
+                          <Box
+                            key={`${key}-${index}`}
+                            p={3}
+                            borderRadius="md"
+                            _hover={{ bg: "gray.100", cursor: "pointer" }}
+                            onClick={() => handleSelectArtist(result)}
+                          >
+                            <Text>{key}</Text>
+                          </Box>
+                          <Separator />
+                        </>
+                      );
+                    })}
+                  </Box>
+                )}
 
               <Field label="Description">
                 <Input
