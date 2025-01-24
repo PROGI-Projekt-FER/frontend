@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Input,
-  InputGroup,
   Stack,
   Center,
   Flex,
@@ -20,19 +19,17 @@ import {
   SelectValueText,
 } from "../ui/select";
 import { createListCollection } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
-import { MdSearch } from "react-icons/md";
+import { useNavigate, useParams } from "react-router-dom";
 
-const CreateTicket = () => {
+const EditTicket = () => {
+  const params = useParams();
+  const id = params.slug;
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
     const user = localStorage.getItem("loggedInUser");
-    if (user) {
-      setLoading(false);
-      setIsLoggedIn(true);
-    } else {
+    if (!user) {
       toaster.create({
         title: "You must be logged in to create tickets",
         type: "error",
@@ -42,11 +39,17 @@ const CreateTicket = () => {
     }
   }, [navigate]);
 
+  const [status, setStatus] = useState("");
+  const [ticketId, setTicketId] = useState("");
+  const [eventId, setEventId] = useState("");
+  const [venueId, setVenueId] = useState("");
+  const [eventEntityId, setEventEntityId] = useState("");
   const [eventName, setEventName] = useState("");
   const [artist, setArtist] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [timestamp, setTimestamp] = useState("");
+  const [locationId, setLocationId] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [offerType, setOfferType] = useState("");
@@ -57,7 +60,6 @@ const CreateTicket = () => {
   );
 
   const [loading, setLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const swapOrSell = createListCollection({
     items: [
@@ -67,6 +69,46 @@ const CreateTicket = () => {
   });
 
   useEffect(() => {
+    const fetchTicket = async () => {
+      try {
+        const response = await fetch(
+          `https://ticketswap-backend.onrender.com/api/tickets/${id}`
+        );
+        if (response.ok) {
+          const ticket = await response.json();
+          setTicketId(ticket.id);
+          setStatus(ticket.status);
+          setEventId(ticket.event.id);
+          setVenueId(ticket.event.venue?.id);
+          setEventName(ticket.event.title);
+          setArtist(ticket.event.eventEntity?.name || "");
+          setEventEntityId(ticket.event.eventEntity?.id);
+          setCategoryId(ticket.categories[0]?.id.toString() || "");
+          setDescription(ticket.event.description);
+          setTimestamp(ticket.event.eventDate);
+          setLocationId(ticket.event.venue.location.id);
+          setAddress(ticket.event.venue.location.address);
+          setCity(ticket.event.venue.location.city);
+          setOfferType(ticket.status === "SWAP" ? "1" : "2");
+          setPrice(ticket.price?.toString() || "");
+          if (ticket.interestedInCategories) {
+            setSwapCategoryId(
+              ticket.interestedInCategories[0]?.id.toString() || ""
+            );
+          }
+        } else {
+          toaster.create({
+            title: "Failed to fetch ticket details",
+            type: "error",
+          });
+        }
+      } catch (error) {
+        toaster.create({ title: "An error occurred", type: "error" });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const fetchCategories = async () => {
       try {
         const response = await fetch(
@@ -85,8 +127,10 @@ const CreateTicket = () => {
         });
       }
     };
+
+    fetchTicket();
     fetchCategories();
-  }, []);
+  }, [id]);
 
   const handleSubmit = async () => {
     if (!eventName) {
@@ -129,26 +173,42 @@ const CreateTicket = () => {
       });
     }
 
+    let newStatus = offerType;
+    if (status === "DEACTIVATED" || status === "DELETED") {
+      newStatus = status;
+    } else {
+      if (offerType === "1") {
+        newStatus = "SWAP";
+      } else {
+        newStatus = "SELL";
+      }
+    }
+
     const payload = {
+      id: ticketId,
       event: {
+        id: eventId,
         title: eventName,
         description,
         eventDate: timestamp,
         venue: {
+          id: venueId,
           name: address,
           capacity: 2500,
           location: {
+            id: locationId,
             country: "",
             city,
             address,
           },
         },
         eventEntity: {
+          id: eventEntityId,
           name: artist,
           type: "string",
         },
       },
-      status: offerType === "1" ? "SWAP" : "SELL",
+      status: newStatus,
       description,
       price: offerType === "2" ? parseFloat(price) : 0,
       categoryIds: [parseInt(categoryId)],
@@ -158,10 +218,10 @@ const CreateTicket = () => {
 
     try {
       const response = await fetch(
-        "https://ticketswap-backend.onrender.com/api/tickets",
+        `https://ticketswap-backend.onrender.com/api/tickets/${id}`,
         {
           credentials: "include",
-          method: "POST",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
@@ -169,27 +229,23 @@ const CreateTicket = () => {
 
       if (response.ok) {
         toaster.create({
-          title: "Ticket created successfully",
+          title: "Ticket updated successfully",
           type: "success",
         });
-        window.location.href = "/browse-tickets";
+        navigate("/my-tickets");
       } else {
-        toaster.create({ title: "Error while creating ticket", type: "error" });
+        toaster.create({ title: "Error updating ticket", type: "error" });
       }
     } catch (error) {
-      alert("An error occurred while creating the ticket.");
+      toaster.create({ title: "An error occurred", type: "error" });
     }
   };
 
   if (loading) {
     return (
-      <>
-        <Toaster />
-
-        <Center h="88vh">
-          <Spinner size="xl" />
-        </Center>
-      </>
+      <Center h="88vh">
+        <Spinner size="xl" />
+      </Center>
     );
   }
 
@@ -199,7 +255,7 @@ const CreateTicket = () => {
       <Center minH="92vh" mt="5" mb="5">
         <Card.Root width="xl" p="4" borderRadius="md">
           <Card.Header>
-            <Card.Title>Create Ticket</Card.Title>
+            <Card.Title>Edit Ticket</Card.Title>
           </Card.Header>
           <Card.Body>
             <Stack gap="4" w="full">
@@ -210,8 +266,11 @@ const CreateTicket = () => {
                   onChange={(e) => setEventName(e.target.value)}
                 />
               </Field>
-
-              <SelectRoot collection={categories} size="sm">
+              <SelectRoot
+                collection={categories}
+                size="sm"
+                defaultValue={categoryId ? [categoryId] : []}
+              >
                 <SelectLabel>Category</SelectLabel>
                 <SelectTrigger>
                   <SelectValueText placeholder="Select category" />
@@ -239,19 +298,16 @@ const CreateTicket = () => {
               </SelectRoot>
 
               {categoryId === "1" && (
-                <Field label="Artistt ">
-                  <InputGroup flex="1" startElement={<MdSearch />}>
-                    <MdSearch />
-                    <Input
-                      placeholder="Enter artistt name"
-                      value={artist}
-                      onChange={(e) => setArtist(e.target.value)}
-                    />
-                  </InputGroup>
+                <Field label="Artist">
+                  <Input
+                    placeholder="Enter artist name"
+                    value={artist}
+                    onChange={(e) => setArtist(e.target.value)}
+                  />
                 </Field>
               )}
 
-              <Field label="Descriptionnn">
+              <Field label="Description">
                 <Input
                   placeholder="Enter description"
                   value={description}
@@ -283,8 +339,11 @@ const CreateTicket = () => {
                   />
                 </Field>
               </Flex>
-
-              <SelectRoot collection={swapOrSell} size="sm">
+              <SelectRoot
+                collection={swapOrSell}
+                size="sm"
+                defaultValue={offerType ? [offerType] : []}
+              >
                 <SelectLabel>Offer Type</SelectLabel>
                 <SelectTrigger>
                   <SelectValueText placeholder="Select offer Type" />
@@ -301,9 +360,12 @@ const CreateTicket = () => {
                   ))}
                 </SelectContent>
               </SelectRoot>
-
               {offerType === "1" && (
-                <SelectRoot collection={categories} size="sm">
+                <SelectRoot
+                  collection={categories}
+                  size="sm"
+                  defaultValue={swapCategoryId ? [swapCategoryId] : []}
+                >
                   <SelectLabel>Swap Category</SelectLabel>
                   <SelectTrigger>
                     <SelectValueText placeholder="Select category for swap" />
@@ -335,7 +397,7 @@ const CreateTicket = () => {
           </Card.Body>
           <Card.Footer justifyContent="flex-end">
             <Button variant="solid" colorScheme="blue" onClick={handleSubmit}>
-              Submit
+              Update
             </Button>
           </Card.Footer>
         </Card.Root>
@@ -344,4 +406,4 @@ const CreateTicket = () => {
   );
 };
 
-export default CreateTicket;
+export default EditTicket;
